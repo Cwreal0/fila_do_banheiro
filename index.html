@@ -381,9 +381,13 @@
   .modal-lock{font-size:34px; margin-bottom:6px;}
   .modal-titulo{font-size:18px; margin-bottom:4px;}
   .modal-sub{font-size:12px; color:var(--texto2); font-weight:700; margin:0 0 16px;}
+  .modal-input-wrap{
+    position:relative;
+    margin-bottom:14px;
+  }
   .modal-input{
     width:100%;
-    padding:14px 16px;
+    padding:14px 46px 14px 16px;
     font-family:'Nunito', sans-serif;
     font-size:18px;
     font-weight:800;
@@ -393,9 +397,22 @@
     background:var(--fundo-alt);
     border:2px solid var(--borda);
     border-radius:12px;
-    margin-bottom:14px;
+    margin-bottom:0;
   }
   .modal-input:focus{outline:none; border-color:var(--azul);}
+  .modal-olho{
+    position:absolute;
+    right:6px;
+    top:50%;
+    transform:translateY(-50%);
+    background:transparent;
+    border:none;
+    font-size:19px;
+    line-height:1;
+    padding:8px;
+    cursor:pointer;
+    user-select:none;
+  }
   .modal-cancelar{
     display:block;
     width:100%;
@@ -502,7 +519,10 @@
     <div class="modal-lock">🔒</div>
     <h3 class="modal-titulo">Senha de <span id="modalSenhaNome">—</span></h3>
     <p class="modal-sub">Só quem vai ao banheiro digita a própria senha.</p>
-    <input type="password" id="modalSenhaInput" class="modal-input" placeholder="Digite a senha" autocomplete="off">
+    <div class="modal-input-wrap">
+      <input type="password" id="modalSenhaInput" class="modal-input" placeholder="Digite a senha" autocomplete="off">
+      <button type="button" class="modal-olho" id="modalSenhaOlho" aria-label="Mostrar senha">👁️</button>
+    </div>
     <button class="btn btn-verde" id="modalSenhaConfirmar">Confirmar saída</button>
     <button class="btn-outline modal-cancelar" id="modalSenhaCancelar">Cancelar</button>
   </div>
@@ -798,14 +818,26 @@
   const modalSenhaSheet = modalSenha.querySelector(".modal-sheet");
   const modalSenhaNome = document.getElementById("modalSenhaNome");
   const modalSenhaInput = document.getElementById("modalSenhaInput");
+  const modalSenhaOlho = document.getElementById("modalSenhaOlho");
   const modalSenhaConfirmar = document.getElementById("modalSenhaConfirmar");
   const modalSenhaCancelar = document.getElementById("modalSenhaCancelar");
   let itemPendente = null;
+
+  modalSenhaOlho.addEventListener("click", ()=>{
+    const mostrando = modalSenhaInput.type === "text";
+    modalSenhaInput.type = mostrando ? "password" : "text";
+    modalSenhaOlho.textContent = mostrando ? "👁️" : "🙈";
+    modalSenhaOlho.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Esconder senha");
+    modalSenhaInput.focus();
+  });
 
   function abrirModalSenha(item){
     itemPendente = item;
     modalSenhaNome.textContent = item.aluno;
     modalSenhaInput.value = "";
+    modalSenhaInput.type = "password";
+    modalSenhaOlho.textContent = "👁️";
+    modalSenhaOlho.setAttribute("aria-label", "Mostrar senha");
     modalSenha.classList.add("show");
     setTimeout(()=> modalSenhaInput.focus(), 100);
   }

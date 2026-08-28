@@ -451,7 +451,6 @@
         <div class="data" id="dataAtual"></div>
       </div>
     </div>
-    <button class="btn-outline" id="btnLimpar">Limpar dia</button>
   </header>
 
   <main>
@@ -492,7 +491,7 @@
       </details>
     </div>
 
-    <div class="footer-nota">Os dados ficam salvos neste aparelho, por dia.</div>
+    <div class="footer-nota">Fila do dia — recomeça sozinha todo dia.</div>
 
   </main>
 
@@ -788,17 +787,11 @@
     toast(aluno + " entrou na fila! ✋", "sucesso");
   });
 
-  // ---------- LIMPAR DIA ----------
-  document.getElementById("btnLimpar").addEventListener("click", async ()=>{
-    if(confirm("Limpar toda a fila e o histórico de hoje?")){
-      const dia = diaAtual();
-      await sb.from("registros").delete().eq("dia", dia);
-      await sb.from("bloqueios").delete().eq("dia", dia);
-      await carregarEstado();
-      render();
-      toast("Dia limpo! ✨", "sucesso");
-    }
-  });
+  // ---------- LIMPEZA ----------
+  // Não precisa de botão: a fila e o histórico já são filtrados pelo dia
+  // atual (dia = diaAtual()), então todo dia novo começa vazio sozinho.
+  // Os registros de dias anteriores continuam guardados no Supabase,
+  // só não aparecem na tela.
 
   // ---------- MODAL DE SENHA ----------
   const modalSenha = document.getElementById("modalSenha");

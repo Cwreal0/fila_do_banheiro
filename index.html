@@ -1284,9 +1284,17 @@
     adminLista.innerHTML = '<div class="vazio">Carregando...</div>';
     const { data, error } = await sb.rpc("admin_listar_alunos", { p_token: adminToken, p_dia: diaAtual() });
     if(error){
-      toast("Sessão de administrador expirou. Entre novamente. 🔒", "erro");
-      adminToken = null;
-      painelAdmin.classList.remove("show");
+      console.error("Erro ao carregar painel administrativo:", error);
+      const msg = (error.message || "").toLowerCase();
+      const sessaoInvalida = msg.includes("sessão de administrador inválida") || msg.includes("sessao de administrador invalida") || msg.includes("expirada");
+      if(sessaoInvalida){
+        toast("Sessão de administrador expirou. Entre novamente. 🔒", "erro");
+        adminToken = null;
+        painelAdmin.classList.remove("show");
+      }else{
+        toast("Erro ao carregar o painel: " + (error.message || "verifique o Supabase"), "erro");
+        adminLista.innerHTML = '<div class="vazio">Não foi possível carregar o painel. Verifique se o SQL do painel administrativo foi executado corretamente no Supabase.</div>';
+      }
       return;
     }
     adminAlunos = data || [];
@@ -1329,8 +1337,16 @@
           btnDesbloq.disabled = true;
           const { error } = await sb.rpc("admin_remover_bloqueio", { p_token: adminToken, p_aluno: a.aluno, p_dia: diaAtual() });
           if(error){
-            toast("Erro ao remover bloqueio 😵", "erro");
-            btnDesbloq.disabled = false;
+            console.error("Erro ao remover bloqueio:", error);
+            const msg = (error.message || "").toLowerCase();
+            if(msg.includes("sessão de administrador inválida") || msg.includes("sessao de administrador invalida") || msg.includes("expirada")){
+              toast("Sessão expirada. Entre novamente. 🔒", "erro");
+              adminToken = null;
+              painelAdmin.classList.remove("show");
+            }else{
+              toast("Erro ao remover bloqueio: " + (error.message || "verifique o Supabase"), "erro");
+              btnDesbloq.disabled = false;
+            }
             return;
           }
           toast(a.aluno + " liberado(a) para usar o sistema novamente! ✅", "sucesso");

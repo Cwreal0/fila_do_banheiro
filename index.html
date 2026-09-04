@@ -545,6 +545,26 @@
   // As senhas NÃO ficam mais no código. Elas moraram para a tabela "alunos"
   // (com hash) no Supabase, e são conferidas pela função verificar_senha().
 
+  // ---------- RELÓGIO DO SERVIDOR ----------
+  // Cada celular/computador tem seu próprio relógio, que pode estar atrasado
+  // ou adiantado. Para o cronômetro de 7 min e as regras de horário não
+  // dependerem do relógio de cada aparelho, sincronizamos com a hora real
+  // do banco de dados (Postgres) e usamos essa diferença (offset) sempre
+  // que precisamos saber "que horas são agora".
+  let offsetServidor = 0; // ms a somar em Date.now() para chegar na hora real do servidor
+
+  async function sincronizarRelogio(){
+    const { data, error } = await sb.rpc("obter_hora_servidor");
+    if(!error && data){
+      offsetServidor = new Date(data).getTime() - Date.now();
+    }else if(error){
+      console.error("Falha ao sincronizar relógio do servidor:", error);
+    }
+  }
+  function agoraServidor(){
+    return Date.now() + offsetServidor;
+  }
+
   const HORARIOS = [
     {ini:"14:30", fim:"15:20"},
     {ini:"15:20", fim:"16:10"},
@@ -635,7 +655,7 @@
 
   // ---------- MONTAR CHIPS DE HORARIO ----------
   function minutosAgora(){
-    const agora = new Date();
+    const agora = new Date(agoraServidor());
     return agora.getHours()*60 + agora.getMinutes();
   }
   function minutosDoHorario(h){
@@ -822,7 +842,10 @@
   const modalSenhaOlho = document.getElementById("modalSenhaOlho");
   const modalSenhaConfirmar = document.getElementById("modalSenhaConfirmar");
   const modalSenhaCancelar = document.getElementById("modalSenhaCancelar");
+  const modalSenhaTitulo = document.querySelector(".modal-titulo");
+  const modalSenhaSub = document.querySelector(".modal-sub");
   let itemPendente = null;
+  let acaoPendente = null; // "sair" | "voltar"
 
   modalSenhaOlho.addEventListener("click", ()=>{
     const mostrando = modalSenhaInput.type === "text";
@@ -832,9 +855,17 @@
     modalSenhaInput.focus();
   });
 
-  function abrirModalSenha(item){
+  function abrirModalSenha(item, acao){
     itemPendente = item;
+    acaoPendente = acao;
     modalSenhaNome.textContent = item.aluno;
+    if(acao === "voltar"){
+      modalSenhaSub.textContent = "Só quem voltou do banheiro digita a própria senha.";
+      modalSenhaConfirmar.textContent = "Confirmar volta";
+    }else{
+      modalSenhaSub.textContent = "Só quem vai ao banheiro digita a própria senha.";
+      modalSenhaConfirmar.textContent = "Confirmar saída";
+    }
     modalSenhaInput.value = "";
     modalSenhaInput.type = "password";
     modalSenhaOlho.textContent = "👁️";
@@ -846,6 +877,7 @@
   function fecharModalSenha(){
     modalSenha.classList.remove("show");
     itemPendente = null;
+    acaoPendente = null;
   }
 
   async function confirmarModalSenha(){
@@ -856,6 +888,7 @@
     const digitada = modalSenhaInput.value;
     const aluno = itemPendente.aluno;
     const id = itemPendente.id;
+    const acao = acaoPendente;
     modalSenhaConfirmar.disabled = true;
     const { data: ok, error } = await sb.rpc("verificar_senha", { p_aluno: aluno, p_senha: digitada });
     modalSenhaConfirmar.disabled = false;
@@ -866,7 +899,11 @@
     }
     if(ok){
       fecharModalSenha();
-      await marcarSaida(id);
+      if(acao === "voltar"){
+        await marcarVolta(id);
+      }else{
+        await marcarSaida(id);
+      }
     }else{
       toast("Senha incorreta! 🔒", "erro");
       modalSenhaSheet.classList.remove("tremer");
@@ -892,8 +929,11 @@
     }
     const item = state.queue.find(i=>i.id === id);
     if(!item) return;
+    // Não enviamos o horário daqui: um trigger no banco preenche "saida"
+    // com now() do Postgres, garantindo que o horário registrado seja
+    // sempre o do servidor, e não o do celular/computador usado.
     const { error } = await sb.from("registros")
-      .update({ status: "fora", saida: new Date().toISOString() })
+      .update({ status: "fora" })
       .eq("id", id);
     if(error){ toast("Erro ao registrar saída 😵", "erro"); console.error(error); return; }
     await carregarEstado();
@@ -918,10 +958,10 @@
   async function marcarVolta(id){
     const item = state.queue.find(i=>i.id === id);
     if(!item || item.status !== "fora") return;
-    const voltaTs = Date.now();
-    const duracaoMs = voltaTs - item.saida;
+    // Idem: "volta" e "duracao_ms" são calculados pelo trigger no banco,
+    // com base no relógio do servidor, não no do aparelho.
     const { error } = await sb.from("registros")
-      .update({ status: "concluido", volta: new Date(voltaTs).toISOString(), duracao_ms: duracaoMs })
+      .update({ status: "concluido" })
       .eq("id", id);
     if(error){ toast("Erro ao registrar volta 😵", "erro"); console.error(error); return; }
     await carregarEstado();
@@ -964,9 +1004,9 @@
           toast((quem ? quem.aluno : "Alguém") + " está no banheiro. Espere ele(a) voltar! ⏳", "erro");
           return;
         }
-        abrirModalSenha(item);
+        abrirModalSenha(item, "sair");
       }else{
-        marcarVolta(item.id);
+        abrirModalSenha(item, "voltar");
       }
     });
     return div;
@@ -1039,7 +1079,7 @@
   function atualizarCronometros(){
     document.querySelectorAll(".cronometro").forEach(el=>{
       const saida = Number(el.dataset.saida);
-      const restante = LIMITE_MS - (Date.now() - saida);
+      const restante = LIMITE_MS - (agoraServidor() - saida);
       if(restante <= 0){
         el.textContent = "00:00";
         tratarEstouro(el.dataset.id);
@@ -1068,9 +1108,14 @@
 
   // ---------- CARGA INICIAL ----------
   (async function iniciar(){
+    await sincronizarRelogio();
     await carregarEstado();
     render();
   })();
+
+  // Resincroniza a cada 1 min para corrigir qualquer desvio de relógio
+  // que apareça ao longo do dia (ex.: aparelho sem hora automática).
+  setInterval(sincronizarRelogio, 60 * 1000);
 
 })();
 </script>

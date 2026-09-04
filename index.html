@@ -61,6 +61,18 @@
   header .brand .emoji{font-size:30px;}
   header h1{font-size:20px; color:var(--texto);}
   header .data{font-size:12px; color:var(--texto2); font-weight:700;}
+  .admin-btn{
+    background:transparent;
+    border:2px solid var(--borda);
+    border-radius:12px;
+    width:40px; height:40px;
+    font-size:18px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    color:var(--texto2);
+    flex-shrink:0;
+  }
+  .admin-btn:active{transform:scale(0.94);}
 
   main{padding:16px 16px 90px;}
 
@@ -421,6 +433,65 @@
     padding:12px;
   }
 
+  /* PAINEL ADMIN */
+  .admin-overlay{align-items:center;}
+  .admin-sheet{
+    max-height:85vh;
+    display:flex;
+    flex-direction:column;
+    text-align:left;
+    border-radius:22px;
+  }
+  .admin-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .admin-lista{overflow-y:auto; flex:1;}
+  .admin-item{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    border:2px solid var(--borda);
+    border-radius:14px;
+    padding:10px 12px;
+    margin-bottom:10px;
+  }
+  .admin-item .admin-nome{
+    flex:1 1 auto;
+    min-width:110px;
+    font-weight:800;
+    font-size:14px;
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  }
+  .admin-item .admin-senha{
+    font-variant-numeric:tabular-nums;
+    font-weight:700;
+    font-size:13px;
+    color:var(--texto2);
+    min-width:80px;
+  }
+  .admin-olho{
+    background:transparent;
+    border:none;
+    font-size:16px;
+    line-height:1;
+    padding:4px;
+    cursor:pointer;
+  }
+  .admin-tag-bloqueado{
+    font-size:11px;
+    font-weight:800;
+    color:var(--vermelho-escuro);
+    background:#FFE3E3;
+    padding:2px 8px;
+    border-radius:20px;
+  }
+  .btn-mini:disabled{opacity:0.6; cursor:not-allowed;}
+
   /* TOAST */
   #toast{
     position:fixed;
@@ -469,6 +540,7 @@
         <div class="data" id="dataAtual"></div>
       </div>
     </div>
+    <button class="admin-btn" id="btnAdmin" title="Área do administrador" aria-label="Área do administrador">⚙️</button>
   </header>
 
   <main>
@@ -526,6 +598,30 @@
     </div>
     <button class="btn btn-verde" id="modalSenhaConfirmar">Confirmar saída</button>
     <button class="btn-outline modal-cancelar" id="modalSenhaCancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAdminLogin">
+  <div class="modal-sheet">
+    <div class="modal-lock">🛡️</div>
+    <h3 class="modal-titulo">Área do administrador</h3>
+    <p class="modal-sub">Digite a senha de administrador para continuar.</p>
+    <div class="modal-input-wrap">
+      <input type="password" id="adminLoginInput" class="modal-input" placeholder="Senha de administrador" autocomplete="off">
+      <button type="button" class="modal-olho" id="adminLoginOlho" aria-label="Mostrar senha">👁️</button>
+    </div>
+    <button class="btn btn-verde" id="adminLoginConfirmar">Entrar</button>
+    <button class="btn-outline modal-cancelar" id="adminLoginCancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay admin-overlay" id="painelAdmin">
+  <div class="modal-sheet admin-sheet">
+    <div class="admin-header">
+      <h3 class="modal-titulo" style="margin:0;">👑 Painel do administrador</h3>
+      <button class="btn-outline" id="adminFechar">Fechar</button>
+    </div>
+    <div id="adminLista" class="admin-lista"></div>
   </div>
 </div>
 
@@ -1116,6 +1212,141 @@
   // Resincroniza a cada 1 min para corrigir qualquer desvio de relógio
   // que apareça ao longo do dia (ex.: aparelho sem hora automática).
   setInterval(sincronizarRelogio, 60 * 1000);
+
+  // ---------- ÁREA DO ADMINISTRADOR ----------
+  // A senha de admin é a mesma do aluno "Matheus Candido", conferida
+  // no Supabase (função admin_login, que reaproveita verificar_senha).
+  // O acesso ao painel só funciona com um token de sessão emitido pelo
+  // banco (admin_sessions), nunca por uma senha fixa aqui no JS.
+  let adminToken = null;
+  let adminAlunos = [];
+
+  const btnAdmin = document.getElementById("btnAdmin");
+  const modalAdminLogin = document.getElementById("modalAdminLogin");
+  const adminLoginInput = document.getElementById("adminLoginInput");
+  const adminLoginOlho = document.getElementById("adminLoginOlho");
+  const adminLoginConfirmar = document.getElementById("adminLoginConfirmar");
+  const adminLoginCancelar = document.getElementById("adminLoginCancelar");
+  const painelAdmin = document.getElementById("painelAdmin");
+  const adminLista = document.getElementById("adminLista");
+  const adminFechar = document.getElementById("adminFechar");
+
+  btnAdmin.addEventListener("click", ()=>{
+    adminLoginInput.value = "";
+    adminLoginInput.type = "password";
+    adminLoginOlho.textContent = "👁️";
+    modalAdminLogin.classList.add("show");
+    setTimeout(()=> adminLoginInput.focus(), 100);
+  });
+
+  adminLoginOlho.addEventListener("click", ()=>{
+    const mostrando = adminLoginInput.type === "text";
+    adminLoginInput.type = mostrando ? "password" : "text";
+    adminLoginOlho.textContent = mostrando ? "👁️" : "🙈";
+    adminLoginInput.focus();
+  });
+
+  function fecharModalAdminLogin(){
+    modalAdminLogin.classList.remove("show");
+  }
+  adminLoginCancelar.addEventListener("click", fecharModalAdminLogin);
+  modalAdminLogin.addEventListener("click", (e)=>{ if(e.target === modalAdminLogin) fecharModalAdminLogin(); });
+  adminLoginInput.addEventListener("keydown", (e)=>{ if(e.key === "Enter") confirmarAdminLogin(); });
+
+  async function confirmarAdminLogin(){
+    const senha = adminLoginInput.value;
+    if(!senha){ adminLoginInput.focus(); return; }
+    adminLoginConfirmar.disabled = true;
+    const { data, error } = await sb.rpc("admin_login", { p_senha: senha });
+    adminLoginConfirmar.disabled = false;
+    if(error || !data){
+      toast("Senha de administrador incorreta! 🔒", "erro");
+      const sheet = modalAdminLogin.querySelector(".modal-sheet");
+      sheet.classList.remove("tremer");
+      void sheet.offsetWidth;
+      sheet.classList.add("tremer");
+      adminLoginInput.value = "";
+      adminLoginInput.focus();
+      return;
+    }
+    adminToken = data;
+    fecharModalAdminLogin();
+    await abrirPainelAdmin();
+  }
+  adminLoginConfirmar.addEventListener("click", confirmarAdminLogin);
+
+  async function abrirPainelAdmin(){
+    painelAdmin.classList.add("show");
+    await carregarAdminAlunos();
+  }
+
+  async function carregarAdminAlunos(){
+    adminLista.innerHTML = '<div class="vazio">Carregando...</div>';
+    const { data, error } = await sb.rpc("admin_listar_alunos", { p_token: adminToken, p_dia: diaAtual() });
+    if(error){
+      toast("Sessão de administrador expirou. Entre novamente. 🔒", "erro");
+      adminToken = null;
+      painelAdmin.classList.remove("show");
+      return;
+    }
+    adminAlunos = data || [];
+    renderAdminLista();
+  }
+
+  function renderAdminLista(){
+    adminLista.innerHTML = "";
+    if(adminAlunos.length === 0){
+      adminLista.innerHTML = '<div class="vazio">Nenhum aluno encontrado.</div>';
+      return;
+    }
+    adminAlunos.forEach(a=>{
+      const senhaDisponivel = a.senha_texto !== null && a.senha_texto !== undefined;
+      const row = document.createElement("div");
+      row.className = "admin-item";
+      row.innerHTML = `
+        <div class="admin-nome">${a.aluno} ${a.bloqueado ? '<span class="admin-tag-bloqueado">🚨 bloqueado</span>' : ''}</div>
+        <div class="admin-senha" data-mostrando="false">••••••••</div>
+        <button type="button" class="admin-olho" aria-label="Mostrar senha">👁️</button>
+        ${a.bloqueado ? '<button type="button" class="btn-mini btn-azul" data-desbloquear="1">Remover bloqueio</button>' : ''}
+      `;
+      const senhaEl = row.querySelector(".admin-senha");
+      const olhoEl = row.querySelector(".admin-olho");
+      olhoEl.addEventListener("click", ()=>{
+        const mostrando = senhaEl.dataset.mostrando === "true";
+        if(mostrando){
+          senhaEl.textContent = "••••••••";
+          senhaEl.dataset.mostrando = "false";
+          olhoEl.textContent = "👁️";
+        }else{
+          senhaEl.textContent = senhaDisponivel ? a.senha_texto : "não disponível";
+          senhaEl.dataset.mostrando = "true";
+          olhoEl.textContent = "🙈";
+        }
+      });
+      const btnDesbloq = row.querySelector("[data-desbloquear]");
+      if(btnDesbloq){
+        btnDesbloq.addEventListener("click", async ()=>{
+          btnDesbloq.disabled = true;
+          const { error } = await sb.rpc("admin_remover_bloqueio", { p_token: adminToken, p_aluno: a.aluno, p_dia: diaAtual() });
+          if(error){
+            toast("Erro ao remover bloqueio 😵", "erro");
+            btnDesbloq.disabled = false;
+            return;
+          }
+          toast(a.aluno + " liberado(a) para usar o sistema novamente! ✅", "sucesso");
+          await carregarEstado();
+          render();
+          await carregarAdminAlunos();
+        });
+      }
+      adminLista.appendChild(row);
+    });
+  }
+
+  adminFechar.addEventListener("click", ()=>{
+    painelAdmin.classList.remove("show");
+  });
+  painelAdmin.addEventListener("click", (e)=>{ if(e.target === painelAdmin) painelAdmin.classList.remove("show"); });
 
 })();
 </script>

@@ -4,1422 +4,4297 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Fila do Banheiro</title>
+
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%92%A9</text></svg>">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-  :root{
-    --verde:#58CC02;
-    --verde-escuro:#46A302;
-    --azul:#1CB0F6;
-    --azul-escuro:#1899D6;
-    --amarelo:#FFC800;
-    --amarelo-escuro:#E5A700;
-    --vermelho:#FF4B4B;
-    --vermelho-escuro:#EA2B2B;
-    --roxo:#CE82FF;
-    --roxo-escuro:#A568CC;
-    --fundo:#FFFFFF;
-    --fundo-alt:#F7F9FA;
-    --texto:#3C3C3C;
-    --texto2:#777777;
-    --borda:#E5E5E5;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;}
-  body{
-    font-family:'Nunito', sans-serif;
-    background:var(--fundo-alt);
-    color:var(--texto);
-    padding-bottom:40px;
-  }
-  h1,h2,h3{
-    font-family:'Baloo 2', sans-serif;
-    margin:0;
-  }
-  .app{
-    max-width:520px;
-    margin:0 auto;
-    min-height:100vh;
-    background:var(--fundo-alt);
-  }
+:root{
+  --verde:#58CC02;
+  --verde-escuro:#46A302;
+  --azul:#1CB0F6;
+  --azul-escuro:#1899D6;
+  --amarelo:#FFC800;
+  --amarelo-escuro:#E5A700;
+  --vermelho:#FF4B4B;
+  --vermelho-escuro:#EA2B2B;
+  --roxo:#CE82FF;
+  --roxo-escuro:#A568CC;
+  --fundo:#FFFFFF;
+  --fundo-alt:#F7F9FA;
+  --texto:#3C3C3C;
+  --texto2:#777777;
+  --borda:#E5E5E5;
+}
 
-  /* HEADER */
-  header{
-    background:var(--fundo);
-    padding:18px 20px 16px;
-    border-bottom:2px solid var(--borda);
-    position:sticky;
-    top:0;
-    z-index:20;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  header .brand{display:flex; align-items:center; gap:10px;}
-  header .brand .emoji{font-size:30px;}
-  header h1{font-size:20px; color:var(--texto);}
-  header .data{font-size:12px; color:var(--texto2); font-weight:700;}
-  .admin-btn{
-    background:transparent;
-    border:2px solid var(--borda);
-    border-radius:12px;
-    width:40px; height:40px;
-    font-size:18px;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    color:var(--texto2);
-    flex-shrink:0;
-  }
-  .admin-btn:active{transform:scale(0.94);}
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
 
-  main{padding:16px 16px 90px;}
+html,body{
+  margin:0;
+  padding:0;
+}
 
-  .card{
-    background:var(--fundo);
-    border:2px solid var(--borda);
-    border-radius:16px;
-    padding:16px;
-    margin-bottom:16px;
-  }
-  .card h2{
-    font-size:15px;
-    color:var(--texto2);
-    text-transform:uppercase;
-    letter-spacing:0.5px;
-    margin-bottom:12px;
-  }
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--fundo-alt);
+  color:var(--texto);
+  padding-bottom:40px;
+}
 
-  /* SELECT ALUNO */
-  select#aluno{
-    width:100%;
-    padding:14px 16px;
-    font-family:'Nunito', sans-serif;
-    font-size:16px;
-    font-weight:800;
-    color:var(--texto);
-    background:var(--fundo);
-    border:2px solid var(--borda);
-    border-radius:12px;
-    appearance:none;
-    -webkit-appearance:none;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'><path fill='%23777777' d='M7 10l5 5 5-5z'/></svg>");
-    background-repeat:no-repeat;
-    background-position:right 14px center;
-    cursor:pointer;
-  }
-  select#aluno:focus{outline:none; border-color:var(--azul);}
+h1,h2,h3{
+  font-family:'Baloo 2',sans-serif;
+  margin:0;
+}
 
-  /* HORARIO CHIPS */
-  .horarios{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-top:12px;
-  }
-  .horario-chip{
-    border:2px solid var(--borda);
-    border-radius:12px;
-    background:var(--fundo);
-    padding:10px 8px;
-    text-align:center;
-    cursor:pointer;
-    user-select:none;
-    transition:transform .08s ease;
-  }
-  .horario-chip .num{
-    font-family:'Baloo 2', sans-serif;
-    font-size:13px;
-    font-weight:700;
-    color:var(--texto2);
-  }
-  .horario-chip .hora{
-    font-size:13px;
-    font-weight:800;
-    color:var(--texto);
-  }
-  .horario-chip.atual{border-color:var(--azul); box-shadow:0 0 0 2px rgba(28,176,246,0.15);}
-  .horario-chip.selecionado{
-    border-color:var(--verde);
-    background:#EFFFDE;
-  }
-  .horario-chip.selecionado .hora{color:var(--verde-escuro);}
-  .horario-chip:active{transform:scale(0.96);}
-  .horario-chip.bloqueado{
-    background:#FFF1F1;
-    border-color:#FFD3D3;
-    cursor:not-allowed;
-    opacity:0.85;
-  }
-  .horario-chip.bloqueado .num,
-  .horario-chip.bloqueado .hora{color:var(--vermelho-escuro);}
-  .horario-chip.bloqueado:active{transform:none;}
-  .horario-chip.bloqueado .tag-proibido{
-    display:block;
-    font-size:10px;
-    font-weight:800;
-    color:var(--vermelho-escuro);
-    margin-top:2px;
-  }
-  .horario-chip.futuro{
-    background:var(--fundo-alt);
-    border-color:var(--borda);
-    cursor:not-allowed;
-    opacity:0.75;
-  }
-  .horario-chip.futuro .num,
-  .horario-chip.futuro .hora{color:var(--texto2);}
-  .horario-chip.futuro:active{transform:none;}
-  .horario-chip.futuro .tag-proibido{
-    display:block;
-    font-size:10px;
-    font-weight:800;
-    color:var(--texto2);
-    margin-top:2px;
-  }
-  .horario-chip.passado{
-    background:var(--fundo-alt);
-    border-color:var(--borda);
-    cursor:not-allowed;
-    opacity:0.6;
-  }
-  .horario-chip.passado .num,
-  .horario-chip.passado .hora{color:var(--texto2); text-decoration:line-through;}
-  .horario-chip.passado:active{transform:none;}
-  .horario-chip.passado .tag-proibido{
-    display:block;
-    font-size:10px;
-    font-weight:800;
-    color:var(--texto2);
-    margin-top:2px;
-  }
-  .horario-chip.usado{
-    background:#F2F2F2;
-    border-color:#DDDDDD;
-    cursor:not-allowed;
-    opacity:0.75;
-  }
-  .horario-chip.usado .num,
-  .horario-chip.usado .hora{color:var(--texto2);}
-  .horario-chip.usado:active{transform:none;}
-  .horario-chip.usado .tag-proibido{
-    display:block;
-    font-size:10px;
-    font-weight:800;
-    color:var(--texto2);
-    margin-top:2px;
-  }
+.app{
+  max-width:520px;
+  margin:0 auto;
+  min-height:100vh;
+  background:var(--fundo-alt);
+}
 
-  /* BOTAO PRINCIPAL - estilo duolingo 3D */
-  .btn{
-    display:block;
-    width:100%;
-    border:none;
-    border-radius:14px;
-    font-family:'Baloo 2', sans-serif;
-    font-size:17px;
-    font-weight:700;
-    letter-spacing:0.3px;
-    padding:15px 10px 17px;
-    color:#fff;
-    cursor:pointer;
-    text-align:center;
-    position:relative;
-    top:0;
-    transition:top .05s ease, box-shadow .05s ease;
-  }
-  .btn:active{top:3px;}
-  .btn-verde{background:var(--verde); box-shadow:0 4px 0 var(--verde-escuro);}
-  .btn-verde:active{box-shadow:0 1px 0 var(--verde-escuro);}
-  .btn-verde:disabled{background:#CFCFCF; box-shadow:0 4px 0 #B5B5B5; cursor:not-allowed;}
-  .btn-verde:disabled:active{top:0;}
+/* HEADER */
 
-  .btn-mini{
-    font-family:'Nunito', sans-serif;
-    font-weight:800;
-    font-size:13px;
-    padding:9px 14px;
-    border-radius:10px;
-    border:none;
-    cursor:pointer;
-    color:#fff;
-    position:relative; top:0;
-    transition:top .05s ease;
-  }
-  .btn-mini:active{top:2px;}
-  .btn-azul{background:var(--azul); box-shadow:0 3px 0 var(--azul-escuro);}
-  .btn-azul:active{box-shadow:0 1px 0 var(--azul-escuro);}
-  .btn-verde-mini{background:var(--verde); box-shadow:0 3px 0 var(--verde-escuro);}
-  .btn-verde-mini:active{box-shadow:0 1px 0 var(--verde-escuro);}
-  .btn-cinza{background:#CFCFCF; box-shadow:0 3px 0 #B5B5B5; cursor:not-allowed;}
-  .btn-cinza:active{top:0;}
+header{
+  background:var(--fundo);
+  padding:18px 20px 16px;
+  border-bottom:2px solid var(--borda);
+  position:sticky;
+  top:0;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
 
-  .btn-outline{
-    background:transparent;
-    border:2px solid var(--borda);
-    color:var(--texto2);
-    font-family:'Nunito',sans-serif;
-    font-weight:800;
-    font-size:12px;
-    padding:8px 12px;
-    border-radius:10px;
-    cursor:pointer;
-  }
+header .brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
 
-  /* FILA */
-  .fila-titulo{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-bottom:10px;
-  }
-  .fila-titulo h3{font-size:15px;}
-  .badge-count{
-    background:var(--azul);
-    color:#fff;
-    font-size:12px;
-    font-weight:800;
-    border-radius:20px;
-    padding:2px 9px;
-  }
-  .fila-titulo.baixa .badge-count{background:var(--amarelo-escuro);}
+header .brand .emoji{
+  font-size:30px;
+}
 
-  .fila-item{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    background:var(--fundo);
-    border:2px solid var(--borda);
-    border-radius:14px;
-    padding:12px;
-    margin-bottom:10px;
-  }
-  .fila-item.baixa{border-color:var(--amarelo);}
-  .fila-item.fora{border-color:var(--azul); background:#F3FBFF;}
-  .fila-item.estourou{border-color:var(--vermelho); background:#FFF1F1;}
-  .status-espera{color:var(--texto2); font-style:italic;}
-  .cronometro.alerta{color:var(--vermelho-escuro);}
-  .aviso-estourado{color:var(--vermelho-escuro); font-weight:800;}
-  .avatar{
-    min-width:44px; height:44px;
-    border-radius:50%;
-    background:var(--azul);
-    color:#fff;
-    font-family:'Baloo 2', sans-serif;
-    font-weight:700;
-    display:flex; align-items:center; justify-content:center;
-    font-size:16px;
-  }
-  .fila-item.baixa .avatar{background:var(--amarelo-escuro);}
-  .fila-info{flex:1; min-width:0;}
-  .fila-info .nome{font-weight:800; font-size:15px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
-  .flame{font-size:12px; background:#FFF3D6; color:var(--amarelo-escuro); padding:1px 7px; border-radius:20px; font-weight:800;}
-  .fila-info .sub{font-size:12px; color:var(--texto2); margin-top:2px;}
-  .cronometro{font-variant-numeric:tabular-nums; font-weight:800; color:var(--azul-escuro);}
+header h1{
+  font-size:20px;
+  color:var(--texto);
+}
 
-  .vazio{
-    text-align:center;
-    color:var(--texto2);
-    font-size:13px;
-    font-weight:700;
-    padding:14px 6px;
-  }
+header .data{
+  font-size:12px;
+  color:var(--texto2);
+  font-weight:700;
+}
 
-  /* HISTORICO */
-  details summary{
-    cursor:pointer;
-    font-family:'Baloo 2', sans-serif;
-    font-size:15px;
-    color:var(--texto2);
-    list-style:none;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  details summary::-webkit-details-marker{display:none;}
-  summary .arrow{transition:transform .15s ease;}
-  details[open] summary .arrow{transform:rotate(180deg);}
-  .hist-item{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:10px 0;
-    border-bottom:1px solid var(--borda);
-    font-size:13px;
-  }
-  .hist-item:last-child{border-bottom:none;}
-  .hist-nome{font-weight:800;}
-  .hist-detalhe{color:var(--texto2); font-size:12px;}
-  .hist-duracao{
-    background:var(--fundo-alt);
-    font-weight:800;
-    border-radius:20px;
-    padding:3px 10px;
-    font-size:12px;
-    color:var(--texto);
-  }
+.admin-btn{
+  background:transparent;
+  border:2px solid var(--borda);
+  border-radius:12px;
+  width:40px;
+  height:40px;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  color:var(--texto2);
+  flex-shrink:0;
+}
 
-  /* MODAL DE SENHA */
-  .modal-overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(60,60,60,0.55);
-    display:none;
-    align-items:flex-end;
-    justify-content:center;
-    z-index:200;
-  }
-  .modal-overlay.show{display:flex;}
-  .modal-sheet{
-    background:var(--fundo);
-    width:100%;
-    max-width:520px;
-    border-radius:22px 22px 0 0;
-    padding:26px 22px 24px;
-    text-align:center;
-    animation:subir .2s ease;
-  }
-  @keyframes subir{
-    from{transform:translateY(30px); opacity:0;}
-    to{transform:translateY(0); opacity:1;}
-  }
-  .modal-sheet.tremer{animation:tremer .35s ease;}
-  @keyframes tremer{
-    10%,90%{transform:translateX(-4px);}
-    20%,80%{transform:translateX(6px);}
-    30%,50%,70%{transform:translateX(-8px);}
-    40%,60%{transform:translateX(8px);}
-  }
-  .modal-lock{font-size:34px; margin-bottom:6px;}
-  .modal-titulo{font-size:18px; margin-bottom:4px;}
-  .modal-sub{font-size:12px; color:var(--texto2); font-weight:700; margin:0 0 16px;}
-  .modal-input-wrap{
-    position:relative;
-    margin-bottom:14px;
-  }
-  .modal-input{
-    width:100%;
-    padding:14px 46px 14px 16px;
-    font-family:'Nunito', sans-serif;
-    font-size:18px;
-    font-weight:800;
-    letter-spacing:2px;
-    text-align:center;
-    color:var(--texto);
-    background:var(--fundo-alt);
-    border:2px solid var(--borda);
-    border-radius:12px;
-    margin-bottom:0;
-  }
-  .modal-input:focus{outline:none; border-color:var(--azul);}
-  .modal-olho{
-    position:absolute;
-    right:6px;
-    top:50%;
-    transform:translateY(-50%);
-    background:transparent;
-    border:none;
-    font-size:19px;
-    line-height:1;
-    padding:8px;
-    cursor:pointer;
-    user-select:none;
-  }
-  .modal-cancelar{
-    display:block;
-    width:100%;
-    margin-top:10px;
-    padding:12px;
-  }
+.admin-btn:active{
+  transform:scale(0.94);
+}
 
-  /* PAINEL ADMIN */
-  .admin-overlay{align-items:center;}
-  .admin-sheet{
-    max-height:85vh;
-    display:flex;
-    flex-direction:column;
-    text-align:left;
-    border-radius:22px;
-  }
-  .admin-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:14px;
-  }
-  .admin-lista{overflow-y:auto; flex:1;}
-  .admin-item{
-    display:flex;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:8px;
-    border:2px solid var(--borda);
-    border-radius:14px;
-    padding:10px 12px;
-    margin-bottom:10px;
-  }
-  .admin-item .admin-nome{
-    flex:1 1 auto;
-    min-width:110px;
-    font-weight:800;
-    font-size:14px;
-    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
-  }
-  .admin-item .admin-senha{
-    font-variant-numeric:tabular-nums;
-    font-weight:700;
-    font-size:13px;
-    color:var(--texto2);
-    min-width:80px;
-  }
-  .admin-olho{
-    background:transparent;
-    border:none;
-    font-size:16px;
-    line-height:1;
-    padding:4px;
-    cursor:pointer;
-  }
-  .admin-tag-bloqueado{
-    font-size:11px;
-    font-weight:800;
-    color:var(--vermelho-escuro);
-    background:#FFE3E3;
-    padding:2px 8px;
-    border-radius:20px;
-  }
-  .btn-mini:disabled{opacity:0.6; cursor:not-allowed;}
+main{
+  padding:16px 16px 90px;
+}
 
-  /* TOAST */
-  #toast{
-    position:fixed;
-    left:50%;
-    bottom:22px;
-    transform:translateX(-50%) translateY(20px);
-    background:var(--texto);
-    color:#fff;
-    font-weight:800;
-    font-size:14px;
-    padding:12px 20px;
-    border-radius:14px;
+.card{
+  background:var(--fundo);
+  border:2px solid var(--borda);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+
+.card h2{
+  font-size:15px;
+  color:var(--texto2);
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  margin-bottom:12px;
+}
+
+/* SELECT */
+
+select#aluno{
+  width:100%;
+  padding:14px 16px;
+  font-family:'Nunito',sans-serif;
+  font-size:16px;
+  font-weight:800;
+  color:var(--texto);
+  background:var(--fundo);
+  border:2px solid var(--borda);
+  border-radius:12px;
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'><path fill='%23777777' d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  cursor:pointer;
+}
+
+select#aluno:focus{
+  outline:none;
+  border-color:var(--azul);
+}
+
+/* HORARIOS */
+
+.horarios{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+
+.horario-chip{
+  border:2px solid var(--borda);
+  border-radius:12px;
+  background:var(--fundo);
+  padding:10px 8px;
+  text-align:center;
+  cursor:pointer;
+  user-select:none;
+  transition:transform .08s ease;
+}
+
+.horario-chip .num{
+  font-family:'Baloo 2',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  color:var(--texto2);
+}
+
+.horario-chip .hora{
+  font-size:13px;
+  font-weight:800;
+  color:var(--texto);
+}
+
+.horario-chip.atual{
+  border-color:var(--azul);
+  box-shadow:0 0 0 2px rgba(28,176,246,.15);
+}
+
+.horario-chip.selecionado{
+  border-color:var(--verde);
+  background:#EFFFDE;
+}
+
+.horario-chip.selecionado .hora{
+  color:var(--verde-escuro);
+}
+
+.horario-chip:active{
+  transform:scale(.96);
+}
+
+.horario-chip.bloqueado{
+  background:#FFF1F1;
+  border-color:#FFD3D3;
+  cursor:not-allowed;
+  opacity:.85;
+}
+
+.horario-chip.bloqueado .num,
+.horario-chip.bloqueado .hora{
+  color:var(--vermelho-escuro);
+}
+
+.horario-chip.bloqueado:active{
+  transform:none;
+}
+
+.horario-chip.bloqueado .tag-proibido,
+.horario-chip.futuro .tag-proibido,
+.horario-chip.passado .tag-proibido,
+.horario-chip.usado .tag-proibido{
+  display:block;
+  font-size:10px;
+  font-weight:800;
+  margin-top:2px;
+}
+
+.horario-chip.bloqueado .tag-proibido{
+  color:var(--vermelho-escuro);
+}
+
+.horario-chip.futuro{
+  background:var(--fundo-alt);
+  border-color:var(--borda);
+  cursor:not-allowed;
+  opacity:.75;
+}
+
+.horario-chip.futuro .num,
+.horario-chip.futuro .hora{
+  color:var(--texto2);
+}
+
+.horario-chip.futuro:active{
+  transform:none;
+}
+
+.horario-chip.futuro .tag-proibido{
+  color:var(--texto2);
+}
+
+.horario-chip.passado{
+  background:var(--fundo-alt);
+  border-color:var(--borda);
+  cursor:not-allowed;
+  opacity:.6;
+}
+
+.horario-chip.passado .num,
+.horario-chip.passado .hora{
+  color:var(--texto2);
+  text-decoration:line-through;
+}
+
+.horario-chip.passado:active{
+  transform:none;
+}
+
+.horario-chip.passado .tag-proibido{
+  color:var(--texto2);
+}
+
+.horario-chip.usado{
+  background:#F2F2F2;
+  border-color:#DDD;
+  cursor:not-allowed;
+  opacity:.75;
+}
+
+.horario-chip.usado .num,
+.horario-chip.usado .hora{
+  color:var(--texto2);
+}
+
+.horario-chip.usado:active{
+  transform:none;
+}
+
+.horario-chip.usado .tag-proibido{
+  color:var(--texto2);
+}
+
+/* BOTOES */
+
+.btn{
+  display:block;
+  width:100%;
+  border:none;
+  border-radius:14px;
+  font-family:'Baloo 2',sans-serif;
+  font-size:17px;
+  font-weight:700;
+  letter-spacing:.3px;
+  padding:15px 10px 17px;
+  color:#fff;
+  cursor:pointer;
+  text-align:center;
+  position:relative;
+  top:0;
+  transition:top .05s ease,box-shadow .05s ease;
+}
+
+.btn:active{
+  top:3px;
+}
+
+.btn-verde{
+  background:var(--verde);
+  box-shadow:0 4px 0 var(--verde-escuro);
+}
+
+.btn-verde:active{
+  box-shadow:0 1px 0 var(--verde-escuro);
+}
+
+.btn-verde:disabled{
+  background:#CFCFCF;
+  box-shadow:0 4px 0 #B5B5B5;
+  cursor:not-allowed;
+}
+
+.btn-verde:disabled:active{
+  top:0;
+}
+
+.btn-mini{
+  font-family:'Nunito',sans-serif;
+  font-weight:800;
+  font-size:13px;
+  padding:9px 14px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  color:#fff;
+  position:relative;
+  top:0;
+  transition:top .05s ease;
+}
+
+.btn-mini:active{
+  top:2px;
+}
+
+.btn-azul{
+  background:var(--azul);
+  box-shadow:0 3px 0 var(--azul-escuro);
+}
+
+.btn-azul:active{
+  box-shadow:0 1px 0 var(--azul-escuro);
+}
+
+.btn-verde-mini{
+  background:var(--verde);
+  box-shadow:0 3px 0 var(--verde-escuro);
+}
+
+.btn-verde-mini:active{
+  box-shadow:0 1px 0 var(--verde-escuro);
+}
+
+.btn-cinza{
+  background:#CFCFCF;
+  box-shadow:0 3px 0 #B5B5B5;
+  cursor:not-allowed;
+}
+
+.btn-cinza:active{
+  top:0;
+}
+
+.btn-outline{
+  background:transparent;
+  border:2px solid var(--borda);
+  color:var(--texto2);
+  font-family:'Nunito',sans-serif;
+  font-weight:800;
+  font-size:12px;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.btn-mini:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* FILA */
+
+.fila-titulo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.fila-titulo h3{
+  font-size:15px;
+}
+
+.badge-count{
+  background:var(--azul);
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  border-radius:20px;
+  padding:2px 9px;
+}
+
+.fila-titulo.baixa .badge-count{
+  background:var(--amarelo-escuro);
+}
+
+.fila-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:var(--fundo);
+  border:2px solid var(--borda);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:10px;
+}
+
+.fila-item.baixa{
+  border-color:var(--amarelo);
+}
+
+.fila-item.fora{
+  border-color:var(--azul);
+  background:#F3FBFF;
+}
+
+.fila-item.estourou{
+  border-color:var(--vermelho);
+  background:#FFF1F1;
+}
+
+.status-espera{
+  color:var(--texto2);
+  font-style:italic;
+}
+
+.cronometro.alerta{
+  color:var(--vermelho-escuro);
+}
+
+.aviso-estourado{
+  color:var(--vermelho-escuro);
+  font-weight:800;
+}
+
+.avatar{
+  min-width:44px;
+  height:44px;
+  border-radius:50%;
+  background:var(--azul);
+  color:#fff;
+  font-family:'Baloo 2',sans-serif;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+}
+
+.fila-item.baixa .avatar{
+  background:var(--amarelo-escuro);
+}
+
+.fila-info{
+  flex:1;
+  min-width:0;
+}
+
+.fila-info .nome{
+  font-weight:800;
+  font-size:15px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.flame{
+  font-size:12px;
+  background:#FFF3D6;
+  color:var(--amarelo-escuro);
+  padding:1px 7px;
+  border-radius:20px;
+  font-weight:800;
+}
+
+.fila-info .sub{
+  font-size:12px;
+  color:var(--texto2);
+  margin-top:2px;
+}
+
+.cronometro{
+  font-variant-numeric:tabular-nums;
+  font-weight:800;
+  color:var(--azul-escuro);
+}
+
+.vazio{
+  text-align:center;
+  color:var(--texto2);
+  font-size:13px;
+  font-weight:700;
+  padding:14px 6px;
+}
+
+/* HISTORICO */
+
+details summary{
+  cursor:pointer;
+  font-family:'Baloo 2',sans-serif;
+  font-size:15px;
+  color:var(--texto2);
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+details summary::-webkit-details-marker{
+  display:none;
+}
+
+summary .arrow{
+  transition:transform .15s ease;
+}
+
+details[open] summary .arrow{
+  transform:rotate(180deg);
+}
+
+.hist-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid var(--borda);
+  font-size:13px;
+}
+
+.hist-item:last-child{
+  border-bottom:none;
+}
+
+.hist-nome{
+  font-weight:800;
+}
+
+.hist-detalhe{
+  color:var(--texto2);
+  font-size:12px;
+}
+
+.hist-duracao{
+  background:var(--fundo-alt);
+  font-weight:800;
+  border-radius:20px;
+  padding:3px 10px;
+  font-size:12px;
+  color:var(--texto);
+}
+
+/* MODAIS */
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(60,60,60,.55);
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  z-index:200;
+}
+
+.modal-overlay.show{
+  display:flex;
+}
+
+.modal-sheet{
+  background:var(--fundo);
+  width:100%;
+  max-width:520px;
+  border-radius:22px 22px 0 0;
+  padding:26px 22px 24px;
+  text-align:center;
+  animation:subir .2s ease;
+}
+
+@keyframes subir{
+  from{
+    transform:translateY(30px);
     opacity:0;
-    pointer-events:none;
-    transition:all .25s ease;
-    z-index:100;
-    max-width:90%;
-    text-align:center;
-    box-shadow:0 6px 18px rgba(0,0,0,0.2);
   }
-  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-  #toast.erro{background:var(--vermelho);}
-  #toast.sucesso{background:var(--verde-escuro);}
+  to{
+    transform:translateY(0);
+    opacity:1;
+  }
+}
 
-  .footer-nota{
-    text-align:center;
-    font-size:11px;
-    color:var(--texto2);
-    margin-top:10px;
-    font-weight:700;
-  }
+.modal-sheet.tremer{
+  animation:tremer .35s ease;
+}
 
-  @media (max-width:360px){
-    .horarios{grid-template-columns:1fr;}
+@keyframes tremer{
+  10%,90%{transform:translateX(-4px);}
+  20%,80%{transform:translateX(6px);}
+  30%,50%,70%{transform:translateX(-8px);}
+  40%,60%{transform:translateX(8px);}
+}
+
+.modal-lock{
+  font-size:34px;
+  margin-bottom:6px;
+}
+
+.modal-titulo{
+  font-size:18px;
+  margin-bottom:4px;
+}
+
+.modal-sub{
+  font-size:12px;
+  color:var(--texto2);
+  font-weight:700;
+  margin:0 0 16px;
+}
+
+.modal-input-wrap{
+  position:relative;
+  margin-bottom:14px;
+}
+
+.modal-input{
+  width:100%;
+  padding:14px 46px 14px 16px;
+  font-family:'Nunito',sans-serif;
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:2px;
+  text-align:center;
+  color:var(--texto);
+  background:var(--fundo-alt);
+  border:2px solid var(--borda);
+  border-radius:12px;
+  margin-bottom:0;
+}
+
+.modal-input:focus{
+  outline:none;
+  border-color:var(--azul);
+}
+
+.modal-olho{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  background:transparent;
+  border:none;
+  font-size:19px;
+  line-height:1;
+  padding:8px;
+  cursor:pointer;
+  user-select:none;
+}
+
+.modal-cancelar{
+  display:block;
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+}
+
+/* ADMIN */
+
+.admin-overlay{
+  align-items:center;
+}
+
+.admin-sheet{
+  max-height:85vh;
+  display:flex;
+  flex-direction:column;
+  text-align:left;
+  border-radius:22px;
+}
+
+.admin-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.admin-lista{
+  overflow-y:auto;
+  flex:1;
+}
+
+.admin-item{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  border:2px solid var(--borda);
+  border-radius:14px;
+  padding:10px 12px;
+  margin-bottom:10px;
+}
+
+.admin-item .admin-nome{
+  flex:1 1 auto;
+  min-width:110px;
+  font-weight:800;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.admin-item .admin-senha{
+  font-variant-numeric:tabular-nums;
+  font-weight:700;
+  font-size:13px;
+  color:var(--texto2);
+  min-width:80px;
+}
+
+.admin-olho{
+  background:transparent;
+  border:none;
+  font-size:16px;
+  line-height:1;
+  padding:4px;
+  cursor:pointer;
+}
+
+.admin-tag-bloqueado{
+  font-size:11px;
+  font-weight:800;
+  color:var(--vermelho-escuro);
+  background:#FFE3E3;
+  padding:2px 8px;
+  border-radius:20px;
+}
+
+.admin-tag-liberado{
+  font-size:11px;
+  font-weight:800;
+  color:var(--verde-escuro);
+  background:#EFFFDE;
+  padding:2px 8px;
+  border-radius:20px;
+}
+
+/* TOAST */
+
+#toast{
+  position:fixed;
+  left:50%;
+  bottom:22px;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--texto);
+  color:#fff;
+  font-weight:800;
+  font-size:14px;
+  padding:12px 20px;
+  border-radius:14px;
+  opacity:0;
+  pointer-events:none;
+  transition:all .25s ease;
+  z-index:100;
+  max-width:90%;
+  text-align:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.2);
+}
+
+#toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+#toast.erro{
+  background:var(--vermelho);
+}
+
+#toast.sucesso{
+  background:var(--verde-escuro);
+}
+
+.footer-nota{
+  text-align:center;
+  font-size:11px;
+  color:var(--texto2);
+  margin-top:10px;
+  font-weight:700;
+}
+
+@media(max-width:360px){
+  .horarios{
+    grid-template-columns:1fr;
   }
+}
 </style>
 </head>
+
 <body>
+
 <div class="app">
 
-  <header>
-    <div class="brand">
-      <span class="emoji">🚽</span>
-      <div>
-        <h1>Fila do Banheiro</h1>
-        <div class="data" id="dataAtual"></div>
-      </div>
-    </div>
-    <button class="admin-btn" id="btnAdmin" title="Área do administrador" aria-label="Área do administrador">⚙️</button>
-  </header>
+<header>
 
-  <main>
+  <div class="brand">
 
-    <div class="card">
-      <h2>Quem vai?</h2>
-      <select id="aluno">
-        <option value="" disabled selected>Escolher aluno...</option>
-      </select>
+    <span class="emoji">🚽</span>
 
-      <div class="horarios" id="horarios"></div>
-
-      <div style="height:14px;"></div>
-      <button class="btn btn-verde" id="btnEntrar">Entrar na fila 🙋</button>
+    <div>
+      <h1>Fila do Banheiro</h1>
+      <div class="data" id="dataAtual"></div>
     </div>
 
-    <div class="card">
-      <div class="fila-titulo">
-        <h3>🟢 Fila normal</h3>
-        <span class="badge-count" id="countNormal">0</span>
-      </div>
-      <div id="filaNormal"></div>
-
-      <div id="blocoBaixa" style="margin-top:18px;">
-        <div class="fila-titulo baixa">
-          <h3>🔥 Prioridade baixa</h3>
-          <span class="badge-count" id="countBaixa">0</span>
-        </div>
-        <div id="filaBaixa"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <details id="histDetails">
-        <summary>📋 Histórico de hoje <span class="arrow">▾</span></summary>
-        <div style="height:10px;"></div>
-        <div id="historico"></div>
-      </details>
-    </div>
-
-    <div class="footer-nota">Fila do dia — recomeça sozinha todo dia.</div>
-
-  </main>
-
-</div>
-
-<div class="modal-overlay" id="modalSenha">
-  <div class="modal-sheet">
-    <div class="modal-lock">🔒</div>
-    <h3 class="modal-titulo">Senha de <span id="modalSenhaNome">—</span></h3>
-    <p class="modal-sub">Só quem vai ao banheiro digita a própria senha.</p>
-    <div class="modal-input-wrap">
-      <input type="password" id="modalSenhaInput" class="modal-input" placeholder="Digite a senha" autocomplete="off">
-      <button type="button" class="modal-olho" id="modalSenhaOlho" aria-label="Mostrar senha">👁️</button>
-    </div>
-    <button class="btn btn-verde" id="modalSenhaConfirmar">Confirmar saída</button>
-    <button class="btn-outline modal-cancelar" id="modalSenhaCancelar">Cancelar</button>
   </div>
-</div>
 
-<div class="modal-overlay" id="modalAdminLogin">
-  <div class="modal-sheet">
-    <div class="modal-lock">🛡️</div>
-    <h3 class="modal-titulo">Área do administrador</h3>
-    <p class="modal-sub">Digite a senha de administrador para continuar.</p>
-    <div class="modal-input-wrap">
-      <input type="password" id="adminLoginInput" class="modal-input" placeholder="Senha de administrador" autocomplete="off">
-      <button type="button" class="modal-olho" id="adminLoginOlho" aria-label="Mostrar senha">👁️</button>
-    </div>
-    <button class="btn btn-verde" id="adminLoginConfirmar">Entrar</button>
-    <button class="btn-outline modal-cancelar" id="adminLoginCancelar">Cancelar</button>
+  <button
+    class="admin-btn"
+    id="btnAdmin"
+    title="Área do administrador"
+    aria-label="Área do administrador"
+  >
+    ⚙️
+  </button>
+
+</header>
+
+<main>
+
+  <!-- ENTRAR NA FILA -->
+
+  <div class="card">
+
+    <h2>Quem vai?</h2>
+
+    <select id="aluno">
+      <option value="" disabled selected>
+        Escolher aluno...
+      </option>
+    </select>
+
+    <div class="horarios" id="horarios"></div>
+
+    <div style="height:14px;"></div>
+
+    <button
+      class="btn btn-verde"
+      id="btnEntrar"
+    >
+      Entrar na fila 🙋
+    </button>
+
   </div>
+
+
+  <!-- FILA -->
+
+  <div class="card">
+
+    <div class="fila-titulo">
+
+      <h3>🟢 Fila normal</h3>
+
+      <span
+        class="badge-count"
+        id="countNormal"
+      >
+        0
+      </span>
+
+    </div>
+
+    <div id="filaNormal"></div>
+
+
+    <div
+      id="blocoBaixa"
+      style="margin-top:18px;"
+    >
+
+      <div class="fila-titulo baixa">
+
+        <h3>🔥 Prioridade baixa</h3>
+
+        <span
+          class="badge-count"
+          id="countBaixa"
+        >
+          0
+        </span>
+
+      </div>
+
+      <div id="filaBaixa"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- HISTORICO -->
+
+  <div class="card">
+
+    <details id="histDetails">
+
+      <summary>
+        📋 Histórico de hoje
+        <span class="arrow">▾</span>
+      </summary>
+
+      <div style="height:10px;"></div>
+
+      <div id="historico"></div>
+
+    </details>
+
+  </div>
+
+
+  <div class="footer-nota">
+    Fila do dia — recomeça sozinha todo dia.
+  </div>
+
+</main>
+
 </div>
 
-<div class="modal-overlay admin-overlay" id="painelAdmin">
+
+<!-- MODAL SENHA -->
+
+<div
+  class="modal-overlay"
+  id="modalSenha"
+>
+
+  <div class="modal-sheet">
+
+    <div class="modal-lock">
+      🔒
+    </div>
+
+    <h3 class="modal-titulo">
+      Senha de
+      <span id="modalSenhaNome">—</span>
+    </h3>
+
+    <p class="modal-sub">
+      Só quem vai ao banheiro digita a própria senha.
+    </p>
+
+    <div class="modal-input-wrap">
+
+      <input
+        type="password"
+        id="modalSenhaInput"
+        class="modal-input"
+        placeholder="Digite a senha"
+        autocomplete="off"
+      >
+
+      <button
+        type="button"
+        class="modal-olho"
+        id="modalSenhaOlho"
+        aria-label="Mostrar senha"
+      >
+        👁️
+      </button>
+
+    </div>
+
+    <button
+      class="btn btn-verde"
+      id="modalSenhaConfirmar"
+    >
+      Confirmar saída
+    </button>
+
+    <button
+      class="btn-outline modal-cancelar"
+      id="modalSenhaCancelar"
+    >
+      Cancelar
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- LOGIN ADMIN -->
+
+<div
+  class="modal-overlay"
+  id="modalAdminLogin"
+>
+
+  <div class="modal-sheet">
+
+    <div class="modal-lock">
+      🛡️
+    </div>
+
+    <h3 class="modal-titulo">
+      Área do administrador
+    </h3>
+
+    <p class="modal-sub">
+      Digite a senha de administrador para continuar.
+    </p>
+
+    <div class="modal-input-wrap">
+
+      <input
+        type="password"
+        id="adminLoginInput"
+        class="modal-input"
+        placeholder="Senha de administrador"
+        autocomplete="off"
+      >
+
+      <button
+        type="button"
+        class="modal-olho"
+        id="adminLoginOlho"
+        aria-label="Mostrar senha"
+      >
+        👁️
+      </button>
+
+    </div>
+
+    <button
+      class="btn btn-verde"
+      id="adminLoginConfirmar"
+    >
+      Entrar
+    </button>
+
+    <button
+      class="btn-outline modal-cancelar"
+      id="adminLoginCancelar"
+    >
+      Cancelar
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- PAINEL ADMIN -->
+
+<div
+  class="modal-overlay admin-overlay"
+  id="painelAdmin"
+>
+
   <div class="modal-sheet admin-sheet">
+
     <div class="admin-header">
-      <h3 class="modal-titulo" style="margin:0;">👑 Painel do administrador</h3>
-      <button class="btn-outline" id="adminFechar">Fechar</button>
+
+      <h3
+        class="modal-titulo"
+        style="margin:0;"
+      >
+        👑 Painel do administrador
+      </h3>
+
+      <button
+        class="btn-outline"
+        id="adminFechar"
+      >
+        Fechar
+      </button>
+
     </div>
-    <div id="adminLista" class="admin-lista"></div>
+
+    <div
+      id="adminLista"
+      class="admin-lista"
+    ></div>
+
   </div>
+
 </div>
+
 
 <div id="toast"></div>
 
+
 <script>
+
 (function(){
 
-  const ALUNOS = ["Bernardo","Bruno","Bryan","Carlos","Davi","Enzo","Franciele","Gabriel","Giovanna","Guilherme","Gustavo","Hian","João","Lucas","Luana","Maria","Martha","Matheus Candido","Mateus Silva","Otávio","Pedro Costa","Pedro Freitas","Pedro Miguel","Pedro Penteado","Richard de Brito","Richard Miguel","Victoria","Yan"];
+/* =========================================================
+   ALUNOS
+========================================================= */
 
-  // ---------- SUPABASE ----------
-  // Troque pelos valores do seu projeto (Settings > API no painel do Supabase).
-  const SUPABASE_URL = "https://tjpvyusqotcxohcervts.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_5oxgs-qJIglf3XxYRQL2PQ_ZxoX_13F";
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const ALUNOS = [
+  "Bernardo",
+  "Bruno",
+  "Bryan",
+  "Carlos",
+  "Davi",
+  "Enzo",
+  "Franciele",
+  "Gabriel",
+  "Giovanna",
+  "Guilherme",
+  "Gustavo",
+  "Hian",
+  "João",
+  "Lucas",
+  "Luana",
+  "Maria",
+  "Martha",
+  "Matheus Candido",
+  "Mateus Silva",
+  "Otávio",
+  "Pedro Costa",
+  "Pedro Freitas",
+  "Pedro Miguel",
+  "Pedro Penteado",
+  "Richard de Brito",
+  "Richard Miguel",
+  "Victoria",
+  "Yan"
+];
 
-  // As senhas NÃO ficam mais no código. Elas moraram para a tabela "alunos"
-  // (com hash) no Supabase, e são conferidas pela função verificar_senha().
 
-  // ---------- RELÓGIO DO SERVIDOR ----------
-  // Cada celular/computador tem seu próprio relógio, que pode estar atrasado
-  // ou adiantado. Para o cronômetro de 7 min e as regras de horário não
-  // dependerem do relógio de cada aparelho, sincronizamos com a hora real
-  // do banco de dados (Postgres) e usamos essa diferença (offset) sempre
-  // que precisamos saber "que horas são agora".
-  let offsetServidor = 0; // ms a somar em Date.now() para chegar na hora real do servidor
+/* =========================================================
+   SUPABASE
+========================================================= */
 
-  async function sincronizarRelogio(){
-    const { data, error } = await sb.rpc("obter_hora_servidor");
-    if(!error && data){
-      offsetServidor = new Date(data).getTime() - Date.now();
-    }else if(error){
-      console.error("Falha ao sincronizar relógio do servidor:", error);
-    }
-  }
-  function agoraServidor(){
-    return Date.now() + offsetServidor;
-  }
+const SUPABASE_URL =
+  "https://tjpvyusqotcxohcervts.supabase.co";
 
-  const HORARIOS = [
-    {ini:"14:30", fim:"15:20"},
-    {ini:"15:20", fim:"16:10"},
-    {ini:"16:20", fim:"17:10"},
-    {ini:"17:10", fim:"18:00"},
-    {ini:"18:00", fim:"18:50"},
-    {ini:"19:50", fim:"20:40"},
-    {ini:"20:40", fim:"21:30"},
-  ];
+const SUPABASE_ANON_KEY =
+  "sb_publishable_5oxgs-qJIglf3XxYRQL2PQ_ZxoX_13F";
 
-  const AULAS_BLOQUEADAS = [0, 2, 5]; // 1ª, 3ª e 6ª aula (índice 0-based) não permitem ida ao banheiro
-  const LIMITE_MS = 7 * 60 * 1000; // tempo máximo permitido no banheiro
+const sb =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 
-  let horarioSelecionado = null; // indice
 
-  function diaAtual(){
-    const d = new Date();
-    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
-  }
+/* =========================================================
+   RELÓGIO DO SERVIDOR
+========================================================= */
 
-  function estadoVazio(){
-    return { queue: [], history: [], counts: {}, baixaCounts: {}, bloqueados: {} };
-  }
+let offsetServidor = 0;
 
-  function rowParaItem(row){
-    return {
-      id: row.id,
-      aluno: row.aluno,
-      horario: { ini: row.horario_ini, fim: row.horario_fim },
-      horarioIdx: row.horario_idx,
-      status: row.status,
-      saida: row.saida ? new Date(row.saida).getTime() : null,
-      volta: row.volta ? new Date(row.volta).getTime() : null,
-      duracaoMs: row.duracao_ms,
-      prioridade: row.prioridade,
-      estourou: row.estourou
-    };
-  }
+async function sincronizarRelogio(){
 
-  // Busca o estado do dia inteiro no Supabase e preenche "state".
-  async function carregarEstado(){
-    const dia = diaAtual();
-    const [{ data: regs, error: e1 }, { data: blos, error: e2 }] = await Promise.all([
-      sb.from("registros").select("*").eq("dia", dia).order("created_at", { ascending: true }),
-      sb.from("bloqueios").select("aluno").eq("dia", dia)
-    ]);
-    if(e1 || e2){
-      toast("Erro ao carregar dados do Supabase 😵", "erro");
-      console.error(e1 || e2);
-      return;
-    }
-    const todos = (regs || []).map(rowParaItem);
-    state.queue = todos.filter(i => i.status !== "concluido");
-    state.history = todos.filter(i => i.status === "concluido").sort((a,b) => (b.volta||0) - (a.volta||0));
-    state.counts = {};
-    state.baixaCounts = {};
-    todos.forEach(i => {
-      state.counts[i.aluno] = (state.counts[i.aluno] || 0) + 1;
-      if(i.prioridade === "baixa") {
-        state.baixaCounts[i.aluno] = (state.baixaCounts[i.aluno] || 0) + 1;
-      }
-    });
-    state.bloqueados = {};
-    (blos || []).forEach(b => { state.bloqueados[b.aluno] = true; });
+  const {
+    data,
+    error
+  } = await sb.rpc(
+    "obter_hora_servidor"
+  );
+
+  if(!error && data){
+
+    offsetServidor =
+      new Date(data).getTime() -
+      Date.now();
+
+  }else if(error){
+
+    console.error(
+      "Falha ao sincronizar relógio:",
+      error
+    );
+
   }
 
-  let state = estadoVazio();
+}
 
-  // ---------- TOAST ----------
-  let toastTimeout;
-  function toast(msg, tipo){
-    const el = document.getElementById("toast");
-    el.textContent = msg;
-    el.className = "show" + (tipo ? " " + tipo : "");
-    clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(()=>{ el.className = ""; }, 2400);
-  }
+function agoraServidor(){
 
-  // ---------- INICIAIS ----------
-  function iniciais(nome){
-    const partes = nome.trim().split(" ");
-    if(partes.length === 1) return partes[0].slice(0,2).toUpperCase();
-    return (partes[0][0] + partes[partes.length-1][0]).toUpperCase();
-  }
+  return Date.now() + offsetServidor;
 
-  // ---------- MONTAR SELECT DE ALUNOS ----------
-  const selectAluno = document.getElementById("aluno");
-  ALUNOS.slice().sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(nome=>{
-    const opt = document.createElement("option");
-    opt.value = nome;
-    opt.textContent = nome;
-    selectAluno.appendChild(opt);
-  });
+}
 
-  // ---------- MONTAR CHIPS DE HORARIO ----------
-  function minutosAgora(){
-    const agora = new Date(agoraServidor());
-    return agora.getHours()*60 + agora.getMinutes();
-  }
-  function minutosDoHorario(h){
-    const [hi,mi] = h.ini.split(":").map(Number);
-    const [hf,mf] = h.fim.split(":").map(Number);
-    return { ini: hi*60+mi, fim: hf*60+mf };
-  }
-  function horarioAtualIndex(){
-    const agora = minutosAgora();
-    for(let i=0;i<HORARIOS.length;i++){
-      const {ini, fim} = minutosDoHorario(HORARIOS[i]);
-      if(agora >= ini && agora < fim) return i;
-    }
-    return -1;
-  }
-  const ULTIMA_AULA_IDX = HORARIOS.length - 1;
-  function statusHorario(i){
-    if(AULAS_BLOQUEADAS.includes(i)) return "proibido";
-    const {ini, fim} = minutosDoHorario(HORARIOS[i]);
-    const agora = minutosAgora();
-    if(agora < ini) return "futuro";
-    if(agora >= fim) return "passado";
-    if(i === ULTIMA_AULA_IDX && agora >= fim - 15) return "ultimos15";
-    return "disponivel";
-  }
 
-  const horariosWrap = document.getElementById("horarios");
+/* =========================================================
+   HORÁRIOS
+========================================================= */
 
-  function renderHorarios(){
-    const alunoAtual = selectAluno.value;
-    const idxAtual = horarioAtualIndex();
-    horariosWrap.innerHTML = "";
-    HORARIOS.forEach((h, i)=>{
-      const status = statusHorario(i);
-      const disponivel = status === "disponivel";
-      const usada = disponivel && alunoAtual && [...state.queue, ...state.history].some(it => it.aluno === alunoAtual && it.horarioIdx === i);
-      const chip = document.createElement("div");
-      chip.className = "horario-chip"
-        + (i === idxAtual && disponivel && !usada ? " atual" : "")
-        + (i === horarioSelecionado ? " selecionado" : "")
-        + (status === "proibido" || status === "ultimos15" ? " bloqueado" : "")
-        + (status === "futuro" ? " futuro" : "")
-        + (status === "passado" ? " passado" : "")
-        + (usada ? " usado" : "");
-      chip.dataset.idx = i;
-      let tag = "";
-      if(status === "proibido") tag = '<span class="tag-proibido">🚫 não permitido</span>';
-      else if(status === "futuro") tag = '<span class="tag-proibido">🔒 ainda não chegou</span>';
-      else if(status === "passado") tag = '<span class="tag-proibido">⏱️ aula já passou</span>';
-      else if(status === "ultimos15") tag = '<span class="tag-proibido">🚫 últimos 15 min</span>';
-      else if(usada) tag = '<span class="tag-proibido">já foi nessa aula</span>';
-      chip.innerHTML = `<div class="num">${i+1}ª aula</div><div class="hora">${h.ini}–${h.fim}</div>${tag}`;
-      if(disponivel && !usada){
-        chip.addEventListener("click", ()=>{
-          horarioSelecionado = i;
-          renderHorarios();
-        });
-      }else{
-        chip.addEventListener("click", ()=>{
-          let msg = "Esse aluno já foi ao banheiro nessa aula!";
-          if(status === "proibido") msg = "Não é permitido ir ao banheiro nessa aula! 🚫";
-          else if(status === "futuro") msg = "Essa aula ainda não começou! 🔒";
-          else if(status === "passado") msg = "Essa aula já passou! ⏱️";
-          else if(status === "ultimos15") msg = "Não é permitido nos últimos 15 min dessa aula! 🚫";
-          toast(msg, "erro");
-        });
-      }
-      horariosWrap.appendChild(chip);
-    });
-  }
-
-  selectAluno.addEventListener("change", renderHorarios);
+const HORARIOS = [
 
   {
-    const idxInicial = horarioAtualIndex();
-    if(idxInicial >= 0 && !AULAS_BLOQUEADAS.includes(idxInicial)){
-      horarioSelecionado = idxInicial;
-    }
+    ini:"14:30",
+    fim:"15:20"
+  },
+
+  {
+    ini:"15:20",
+    fim:"16:10"
+  },
+
+  {
+    ini:"16:20",
+    fim:"17:10"
+  },
+
+  {
+    ini:"17:10",
+    fim:"18:00"
+  },
+
+  {
+    ini:"18:00",
+    fim:"18:50"
+  },
+
+  {
+    ini:"19:50",
+    fim:"20:40"
+  },
+
+  {
+    ini:"20:40",
+    fim:"21:30"
   }
+
+];
+
+const AULAS_BLOQUEADAS = [
+  0,
+  2,
+  5
+];
+
+const LIMITE_MS =
+  7 * 60 * 1000;
+
+let horarioSelecionado = null;
+
+
+/* =========================================================
+   DATA
+========================================================= */
+
+function diaAtual(){
+
+  const d =
+    new Date(
+      agoraServidor()
+    );
+
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth()+1)
+      .padStart(2,"0") +
+    "-" +
+    String(d.getDate())
+      .padStart(2,"0")
+  );
+
+}
+
+
+/* =========================================================
+   ESTADO
+========================================================= */
+
+function estadoVazio(){
+
+  return {
+    queue:[],
+    history:[],
+    counts:{},
+    baixaCounts:{},
+    bloqueados:{}
+  };
+
+}
+
+let state =
+  estadoVazio();
+
+
+*//* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimeout;
+
+function toast(msg,tipo){
+
+  const el =
+    document.getElementById("toast");
+
+  el.textContent = msg;
+
+  el.className =
+    "show" +
+    (tipo ? " " + tipo : "");
+
+  clearTimeout(toastTimeout);
+
+  toastTimeout =
+    setTimeout(()=>{
+      el.className = "";
+    },2400);
+
+}
+
+
+/* =========================================================
+   CONVERSÃO DOS REGISTROS
+========================================================= */
+
+function rowParaItem(row){
+
+  return {
+
+    id:row.id,
+
+    aluno:row.aluno,
+
+    horario:{
+      ini:row.horario_ini,
+      fim:row.horario_fim
+    },
+
+    horarioIdx:
+      row.horario_idx,
+
+    status:
+      row.status,
+
+    saida:
+      row.saida
+        ? new Date(row.saida).getTime()
+        : null,
+
+    volta:
+      row.volta
+        ? new Date(row.volta).getTime()
+        : null,
+
+    duracaoMs:
+      row.duracao_ms,
+
+    prioridade:
+      row.prioridade,
+
+    estourou:
+      row.estourou
+
+  };
+
+}
+
+
+/* =========================================================
+   CARREGAR ESTADO
+========================================================= */
+
+async function carregarEstado(){
+
+  const dia =
+    diaAtual();
+
+  const [
+    {data:regs,error:e1},
+    {data:blos,error:e2}
+  ] =
+    await Promise.all([
+
+      sb
+        .from("registros")
+        .select("*")
+        .eq("dia",dia)
+        .order(
+          "created_at",
+          {
+            ascending:true
+          }
+        ),
+
+      sb
+        .from("bloqueios")
+        .select("aluno")
+        .eq("dia",dia)
+
+    ]);
+
+
+  if(e1 || e2){
+
+    toast(
+      "Erro ao carregar dados do Supabase 😵",
+      "erro"
+    );
+
+    console.error(
+      e1 || e2
+    );
+
+    return;
+
+  }
+
+
+  const todos =
+    (regs || [])
+      .map(rowParaItem);
+
+
+  state.queue =
+    todos.filter(
+      i => i.status !== "concluido"
+    );
+
+
+  state.history =
+    todos
+      .filter(
+        i => i.status === "concluido"
+      )
+      .sort(
+        (a,b) =>
+          (b.volta || 0) -
+          (a.volta || 0)
+      );
+
+
+  state.counts = {};
+  state.baixaCounts = {};
+
+
+  todos.forEach(i=>{
+
+    state.counts[i.aluno] =
+      (state.counts[i.aluno] || 0) + 1;
+
+    if(i.prioridade === "baixa"){
+
+      state.baixaCounts[i.aluno] =
+        (state.baixaCounts[i.aluno] || 0) + 1;
+
+    }
+
+  });
+
+
+  state.bloqueados = {};
+
+
+  (blos || []).forEach(b=>{
+
+    state.bloqueados[b.aluno] =
+      true;
+
+  });
+
+}
+
+
+/* =========================================================
+   INICIAIS
+========================================================= */
+
+function iniciais(nome){
+
+  const partes =
+    nome.trim().split(" ");
+
+  if(partes.length === 1){
+
+    return partes[0]
+      .slice(0,2)
+      .toUpperCase();
+
+  }
+
+  return (
+    partes[0][0] +
+    partes[partes.length-1][0]
+  ).toUpperCase();
+
+}
+
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+const selectAluno =
+  document.getElementById("aluno");
+
+
+ALUNOS
+  .slice()
+  .sort(
+    (a,b)=>
+      a.localeCompare(
+        b,
+        "pt-BR"
+      )
+  )
+  .forEach(nome=>{
+
+    const opt =
+      document.createElement(
+        "option"
+      );
+
+    opt.value = nome;
+    opt.textContent = nome;
+
+    selectAluno.appendChild(opt);
+
+  });
+
+
+/* =========================================================
+   HORÁRIOS
+========================================================= */
+
+function minutosAgora(){
+
+  const agora =
+    new Date(
+      agoraServidor()
+    );
+
+  return (
+    agora.getHours() * 60 +
+    agora.getMinutes()
+  );
+
+}
+
+
+function minutosDoHorario(h){
+
+  const [
+    hi,
+    mi
+  ] =
+    h.ini
+      .split(":")
+      .map(Number);
+
+  const [
+    hf,
+    mf
+  ] =
+    h.fim
+      .split(":")
+      .map(Number);
+
+  return {
+
+    ini:
+      hi * 60 + mi,
+
+    fim:
+      hf * 60 + mf
+
+  };
+
+}
+
+
+function horarioAtualIndex(){
+
+  const agora =
+    minutosAgora();
+
+  for(
+    let i=0;
+    i<HORARIOS.length;
+    i++
+  ){
+
+    const {
+      ini,
+      fim
+    } =
+      minutosDoHorario(
+        HORARIOS[i]
+      );
+
+    if(
+      agora >= ini &&
+      agora < fim
+    ){
+
+      return i;
+
+    }
+
+  }
+
+  return -1;
+
+}
+
+
+const ULTIMA_AULA_IDX =
+  HORARIOS.length - 1;
+
+
+function statusHorario(i){
+
+  if(
+    AULAS_BLOQUEADAS
+      .includes(i)
+  ){
+
+    return "proibido";
+
+  }
+
+
+  const {
+    ini,
+    fim
+  } =
+    minutosDoHorario(
+      HORARIOS[i]
+    );
+
+  const agora =
+    minutosAgora();
+
+
+  if(agora < ini)
+    return "futuro";
+
+
+  if(agora >= fim)
+    return "passado";
+
+
+  if(
+    i === ULTIMA_AULA_IDX &&
+    agora >= fim - 15
+  ){
+
+    return "ultimos15";
+
+  }
+
+
+  return "disponivel";
+
+}
+
+
+const horariosWrap =
+  document.getElementById(
+    "horarios"
+  );
+
+
+function renderHorarios(){
+
+  const alunoAtual =
+    selectAluno.value;
+
+  const idxAtual =
+    horarioAtualIndex();
+
+  horariosWrap.innerHTML = "";
+
+
+  HORARIOS.forEach((h,i)=>{
+
+    const status =
+      statusHorario(i);
+
+    const disponivel =
+      status === "disponivel";
+
+
+    const usada =
+      disponivel &&
+      alunoAtual &&
+      [
+        ...state.queue,
+        ...state.history
+      ].some(
+        it =>
+          it.aluno === alunoAtual &&
+          it.horarioIdx === i
+      );
+
+
+    const chip =
+      document.createElement(
+        "div"
+      );
+
+
+    chip.className =
+      "horario-chip" +
+
+      (
+        i === idxAtual &&
+        disponivel &&
+        !usada
+          ? " atual"
+          : ""
+      ) +
+
+      (
+        i === horarioSelecionado
+          ? " selecionado"
+          : ""
+      ) +
+
+      (
+        status === "proibido" ||
+        status === "ultimos15"
+          ? " bloqueado"
+          : ""
+      ) +
+
+      (
+        status === "futuro"
+          ? " futuro"
+          : ""
+      ) +
+
+      (
+        status === "passado"
+          ? " passado"
+          : ""
+      ) +
+
+      (
+        usada
+          ? " usado"
+          : ""
+      );
+
+
+    chip.dataset.idx = i;
+
+
+    let tag = "";
+
+
+    if(status === "proibido")
+      tag =
+        '<span class="tag-proibido">🚫 não permitido</span>';
+
+    else if(status === "futuro")
+      tag =
+        '<span class="tag-proibido">🔒 ainda não chegou</span>';
+
+    else if(status === "passado")
+      tag =
+        '<span class="tag-proibido">⏱️ aula já passou</span>';
+
+    else if(status === "ultimos15")
+      tag =
+        '<span class="tag-proibido">🚫 últimos 15 min</span>';
+
+    else if(usada)
+      tag =
+        '<span class="tag-proibido">já foi nessa aula</span>';
+
+
+    chip.innerHTML = `
+      <div class="num">
+        ${i+1}ª aula
+      </div>
+
+      <div class="hora">
+        ${h.ini}–${h.fim}
+      </div>
+
+      ${tag}
+    `;
+
+
+    if(
+      disponivel &&
+      !usada
+    ){
+
+      chip.addEventListener(
+        "click",
+        ()=>{
+          horarioSelecionado = i;
+          renderHorarios();
+        }
+      );
+
+    }else{
+
+      chip.addEventListener(
+        "click",
+        ()=>{
+
+          let msg =
+            "Esse aluno já foi ao banheiro nessa aula!";
+
+          if(status === "proibido")
+            msg =
+              "Não é permitido ir ao banheiro nessa aula! 🚫";
+
+          else if(status === "futuro")
+            msg =
+              "Essa aula ainda não começou! 🔒";
+
+          else if(status === "passado")
+            msg =
+              "Essa aula já passou! ⏱️";
+
+          else if(status === "ultimos15")
+            msg =
+              "Não é permitido nos últimos 15 min dessa aula! 🚫";
+
+
+          toast(
+            msg,
+            "erro"
+          );
+
+        }
+      );
+
+    }
+
+
+    horariosWrap.appendChild(chip);
+
+  });
+
+}
+
+
+selectAluno.addEventListener(
+  "change",
+  renderHorarios
+);
+
+
+const idxInicial =
+  horarioAtualIndex();
+
+
+if(
+  idxInicial >= 0 &&
+  !AULAS_BLOQUEADAS.includes(
+    idxInicial
+  )
+){
+
+  horarioSelecionado =
+    idxInicial;
+
+}
+
+
+renderHorarios();
+
+
+/* =========================================================
+   DATA
+========================================================= */
+
+document.getElementById(
+  "dataAtual"
+).textContent =
+  new Date(
+    agoraServidor()
+  ).toLocaleDateString(
+    "pt-BR",
+    {
+      weekday:"long",
+      day:"2-digit",
+      month:"long"
+    }
+  );
+
+
+/* =========================================================
+   FORMATAÇÃO
+========================================================= */
+
+function formataHora(ts){
+
+  return new Date(ts)
+    .toLocaleTimeString(
+      "pt-BR",
+      {
+        hour:"2-digit",
+        minute:"2-digit"
+      }
+    );
+
+}
+
+
+function formataCronometro(ms){
+
+  const totalSeg =
+    Math.max(
+      0,
+      Math.floor(ms / 1000)
+    );
+
+  const m =
+    Math.floor(
+      totalSeg / 60
+    );
+
+  const s =
+    totalSeg % 60;
+
+  return (
+    String(m).padStart(2,"0") +
+    ":" +
+    String(s).padStart(2,"0")
+  );
+
+}
+
+
+function formataDuracao(ms){
+
+  if(ms === null || ms === undefined)
+    return "—";
+
+  const totalSeg =
+    Math.floor(ms / 1000);
+
+  const m =
+    Math.floor(totalSeg / 60);
+
+  const s =
+    totalSeg % 60;
+
+  return (
+    m +
+    " min " +
+    String(s).padStart(2,"0") +
+    "s"
+  );
+
+}
+
+
+/* =========================================================
+   ENTRAR NA FILA
+========================================================= */
+
+document
+  .getElementById("btnEntrar")
+  .addEventListener(
+    "click",
+    async ()=>{
+
+      const aluno =
+        selectAluno.value;
+
+
+      if(!aluno){
+
+        toast(
+          "Escolha um aluno primeiro!",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      if(
+        state.bloqueados[aluno]
+      ){
+
+        toast(
+          aluno +
+          " foi encaminhado à vice-direção e não pode ir ao banheiro hoje. 🚨",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      if(
+        horarioSelecionado === null
+      ){
+
+        toast(
+          "Escolha o horário da aula!",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      if(
+        AULAS_BLOQUEADAS
+          .includes(
+            horarioSelecionado
+          )
+      ){
+
+        toast(
+          "Não é permitido ir ao banheiro nessa aula! 🚫",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      const statusAtual =
+        statusHorario(
+          horarioSelecionado
+        );
+
+
+      if(statusAtual === "futuro"){
+
+        toast(
+          "Essa aula ainda não começou! 🔒",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      if(statusAtual === "passado"){
+
+        toast(
+          "Essa aula já passou! ⏱️",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      if(statusAtual === "ultimos15"){
+
+        toast(
+          "Não é permitido nos últimos 15 min dessa aula! 🚫",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      const vezesHoje =
+        state.counts[aluno] || 0;
+
+
+      if(vezesHoje >= 3){
+
+        toast(
+          aluno +
+          " já foi 3 vezes hoje, o limite do dia! 🛑",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      const jaFoiNestaAula =
+        [
+          ...state.queue,
+          ...state.history
+        ].some(
+          i =>
+            i.aluno === aluno &&
+            i.horarioIdx ===
+              horarioSelecionado
+        );
+
+
+      if(jaFoiNestaAula){
+
+        toast(
+          aluno +
+          " já foi ao banheiro nessa aula hoje!",
+          "erro"
+        );
+
+        return;
+
+      }
+
+
+      const vezesBaixaHoje =
+        state.baixaCounts[aluno] || 0;
+
+
+      const prioridade =
+        vezesBaixaHoje >= 1
+          ? "baixa"
+          : "normal";
+
+
+      const h =
+        HORARIOS[
+          horarioSelecionado
+        ];
+
+
+      const btnEntrar =
+        document.getElementById(
+          "btnEntrar"
+        );
+
+
+      btnEntrar.disabled = true;
+
+
+      const {
+        error
+      } =
+        await sb
+          .from("registros")
+          .insert({
+
+            dia:
+              diaAtual(),
+
+            aluno,
+
+            horario_idx:
+              horarioSelecionado,
+
+            horario_ini:
+              h.ini,
+
+            horario_fim:
+              h.fim,
+
+            status:
+              "esperando",
+
+            prioridade
+
+          });
+
+
+      btnEntrar.disabled = false;
+
+
+      if(error){
+
+        toast(
+          "Erro ao entrar na fila 😵",
+          "erro"
+        );
+
+        console.error(error);
+
+        return;
+
+      }
+
+
+      selectAluno.value = "";
+
+
+      const idxNovo =
+        horarioAtualIndex();
+
+
+      horarioSelecionado =
+        (
+          idxNovo >= 0 &&
+          !AULAS_BLOQUEADAS.includes(
+            idxNovo
+          )
+        )
+          ? idxNovo
+          : null;
+
+
+      await carregarEstado();
+
+      render();
+
+
+      toast(
+        aluno +
+        " entrou na fila! ✋",
+        "sucesso"
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   MODAL DE SENHA
+========================================================= */
+
+const modalSenha =
+  document.getElementById(
+    "modalSenha"
+  );
+
+const modalSenhaSheet =
+  modalSenha.querySelector(
+    ".modal-sheet"
+  );
+
+const modalSenhaNome =
+  document.getElementById(
+    "modalSenhaNome"
+  );
+
+const modalSenhaInput =
+  document.getElementById(
+    "modalSenhaInput"
+  );
+
+const modalSenhaOlho =
+  document.getElementById(
+    "modalSenhaOlho"
+  );
+
+const modalSenhaConfirmar =
+  document.getElementById(
+    "modalSenhaConfirmar"
+  );
+
+const modalSenhaCancelar =
+  document.getElementById(
+    "modalSenhaCancelar"
+  );
+
+const modalSenhaSub =
+  modalSenha.querySelector(
+    ".modal-sub"
+  );
+
+
+let itemPendente = null;
+let acaoPendente = null;
+
+
+modalSenhaOlho.addEventListener(
+  "click",
+  ()=>{
+
+    const mostrando =
+      modalSenhaInput.type === "text";
+
+
+    modalSenhaInput.type =
+      mostrando
+        ? "password"
+        : "text";
+
+
+    modalSenhaOlho.textContent =
+      mostrando
+        ? "👁️"
+        : "🙈";
+
+
+    modalSenhaInput.focus();
+
+  }
+);
+
+
+function abrirModalSenha(
+  item,
+  acao
+){
+
+  itemPendente = item;
+  acaoPendente = acao;
+
+  modalSenhaNome.textContent =
+    item.aluno;
+
+
+  if(acao === "voltar"){
+
+    modalSenhaSub.textContent =
+      "Só quem voltou do banheiro digita a própria senha.";
+
+    modalSenhaConfirmar.textContent =
+      "Confirmar volta";
+
+  }else{
+
+    modalSenhaSub.textContent =
+      "Só quem vai ao banheiro digita a própria senha.";
+
+    modalSenhaConfirmar.textContent =
+      "Confirmar saída";
+
+  }
+
+
+  modalSenhaInput.value = "";
+
+  modalSenhaInput.type =
+    "password";
+
+  modalSenhaOlho.textContent =
+    "👁️";
+
+
+  modalSenha.classList.add(
+    "show"
+  );
+
+
+  setTimeout(
+    ()=>modalSenhaInput.focus(),
+    100
+  );
+
+}
+
+
+function fecharModalSenha(){
+
+  modalSenha.classList.remove(
+    "show"
+  );
+
+  itemPendente = null;
+  acaoPendente = null;
+
+}
+
+
+async function confirmarModalSenha(){
+
+  if(
+    !itemPendente ||
+    !modalSenhaInput.value
+  ){
+
+    if(itemPendente)
+      modalSenhaInput.focus();
+
+    return;
+
+  }
+
+
+  const digitada =
+    modalSenhaInput.value;
+
+  const aluno =
+    itemPendente.aluno;
+
+  const id =
+    itemPendente.id;
+
+  const acao =
+    acaoPendente;
+
+
+  modalSenhaConfirmar.disabled =
+    true;
+
+
+  const {
+    data:ok,
+    error
+  } =
+    await sb.rpc(
+      "verificar_senha",
+      {
+        p_aluno:aluno,
+        p_senha:digitada
+      }
+    );
+
+
+  modalSenhaConfirmar.disabled =
+    false;
+
+
+  if(error){
+
+    toast(
+      "Erro ao verificar a senha 😵",
+      "erro"
+    );
+
+    console.error(error);
+
+    return;
+
+  }
+
+
+  if(ok){
+
+    fecharModalSenha();
+
+    if(acao === "voltar"){
+
+      await marcarVolta(id);
+
+    }else{
+
+      await marcarSaida(id);
+
+    }
+
+  }else{
+
+    toast(
+      "Senha incorreta! 🔒",
+      "erro"
+    );
+
+    modalSenhaSheet
+      .classList
+      .remove("tremer");
+
+    void modalSenhaSheet.offsetWidth;
+
+    modalSenhaSheet
+      .classList
+      .add("tremer");
+
+    modalSenhaInput.value = "";
+
+    modalSenhaInput.focus();
+
+  }
+
+}
+
+
+modalSenhaConfirmar.addEventListener(
+  "click",
+  confirmarModalSenha
+);
+
+modalSenhaCancelar.addEventListener(
+  "click",
+  fecharModalSenha
+);
+
+modalSenha.addEventListener(
+  "click",
+  e=>{
+    if(e.target === modalSenha)
+      fecharModalSenha();
+  }
+);
+
+modalSenhaInput.addEventListener(
+  "keydown",
+  e=>{
+    if(e.key === "Enter")
+      confirmarModalSenha();
+  }
+);
+
+
+/* =========================================================
+   SAÍDA
+========================================================= */
+
+async function marcarSaida(id){
+
+  const alguemFora =
+    state.queue.some(
+      i=>i.status === "fora"
+    );
+
+
+  if(alguemFora){
+
+    const quem =
+      state.queue.find(
+        i=>i.status === "fora"
+      );
+
+    toast(
+      quem.aluno +
+      " está no banheiro. Espere ele(a) voltar! ⏳",
+      "erro"
+    );
+
+    return;
+
+  }
+
+
+  const item =
+    state.queue.find(
+      i=>i.id === id
+    );
+
+
+  if(!item) return;
+
+
+  const {
+    error
+  } =
+    await sb
+      .from("registros")
+      .update({
+        status:"fora"
+      })
+      .eq("id",id);
+
+
+  if(error){
+
+    toast(
+      "Erro ao registrar saída 😵",
+      "erro"
+    );
+
+    console.error(error);
+
+    return;
+
+  }
+
+
+  await carregarEstado();
+
+  render();
+
+
+  toast(
+    item.aluno +
+    " saiu! 🚪",
+    "sucesso"
+  );
+
+}
+
+
+/* =========================================================
+   ESTOURO
+========================================================= */
+
+async function tratarEstouro(id){
+
+  const item =
+    state.queue.find(
+      i=>i.id === id
+    );
+
+
+  if(
+    !item ||
+    item.estourou
+  ){
+
+    return;
+
+  }
+
+
+  item.estourou = true;
+
+
+  const {
+    error
+  } =
+    await sb
+      .from("registros")
+      .update({
+        estourou:true
+      })
+      .eq("id",id);
+
+
+  if(error){
+
+    console.error(error);
+
+    return;
+
+  }
+
+
+  await sb
+    .from("bloqueios")
+    .upsert({
+      aluno:item.aluno,
+      dia:diaAtual()
+    });
+
+
+  await carregarEstado();
+
+  render();
+
+
+  toast(
+    item.aluno +
+    " estourou os 7 min! Encaminhado à vice-direção 🚨",
+    "erro"
+  );
+
+}
+
+
+/* =========================================================
+   VOLTA
+========================================================= */
+
+async function marcarVolta(id){
+
+  const item =
+    state.queue.find(
+      i=>i.id === id
+    );
+
+
+  if(
+    !item ||
+    item.status !== "fora"
+  ){
+
+    return;
+
+  }
+
+
+  const {
+    error
+  } =
+    await sb
+      .from("registros")
+      .update({
+        status:"concluido"
+      })
+      .eq("id",id);
+
+
+  if(error){
+
+    toast(
+      "Erro ao registrar volta 😵",
+      "erro"
+    );
+
+    console.error(error);
+
+    return;
+
+  }
+
+
+  await carregarEstado();
+
+  render();
+
+
+  toast(
+    item.aluno +
+    " voltou! ✅",
+    "sucesso"
+  );
+
+}
+
+
+/* =========================================================
+   ITEM DA FILA
+========================================================= */
+
+function criaItemFila(
+  item,
+  bloquearSaida
+){
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+
+  div.className =
+    "fila-item" +
+
+    (
+      item.prioridade === "baixa"
+        ? " baixa"
+        : ""
+    ) +
+
+    (
+      item.status === "fora"
+        ? " fora"
+        : ""
+    ) +
+
+    (
+      item.estourou
+        ? " estourou"
+        : ""
+    );
+
+
+  const flame =
+    item.prioridade === "baixa"
+      ? '<span class="flame">🔥 já foi hoje</span>'
+      : "";
+
+
+  let sub;
+  let botao;
+
+
+  if(
+    item.status === "esperando"
+  ){
+
+    sub =
+      `${item.horario.ini}–${item.horario.fim} · <span class="status-espera">aguardando autorização</span>`;
+
+
+    botao =
+      `<button class="btn-mini ${
+        bloquearSaida
+          ? "btn-cinza"
+          : "btn-verde-mini"
+      }"
+      data-acao="sair"
+      data-id="${item.id}">
+      Confirmar saída
+      </button>`;
+
+  }
+
+
+  else if(item.estourou){
+
+    sub =
+      `${item.horario.ini}–${item.horario.fim} · saiu às ${formataHora(item.saida)} · <span class="aviso-estourado">🚨 tempo esgotado — vice-direção</span>`;
+
+
+    botao =
+      `<button
+        class="btn-mini btn-azul"
+        data-acao="voltou"
+        data-id="${item.id}">
+        Voltou
+      </button>`;
+
+  }
+
+
+  else{
+
+    sub =
+      `${item.horario.ini}–${item.horario.fim} · saiu às ${formataHora(item.saida)} · <span class="cronometro" data-saida="${item.saida}" data-id="${item.id}">07:00</span>`;
+
+
+    botao =
+      `<button
+        class="btn-mini btn-azul"
+        data-acao="voltou"
+        data-id="${item.id}">
+        Voltou
+      </button>`;
+
+  }
+
+
+  div.innerHTML = `
+
+    <div class="avatar">
+      ${iniciais(item.aluno)}
+    </div>
+
+    <div class="fila-info">
+
+      <div class="nome">
+        ${item.aluno}
+        ${flame}
+      </div>
+
+      <div class="sub">
+        ${sub}
+      </div>
+
+    </div>
+
+    ${botao}
+
+  `;
+
+
+  const btn =
+    div.querySelector(
+      "button"
+    );
+
+
+  btn.addEventListener(
+    "click",
+    ()=>{
+
+      if(
+        btn.dataset.acao === "sair"
+      ){
+
+        if(bloquearSaida){
+
+          const quem =
+            state.queue.find(
+              i=>i.status === "fora"
+            );
+
+          toast(
+            (
+              quem
+                ? quem.aluno
+                : "Alguém"
+            ) +
+            " está no banheiro. Espere ele(a) voltar! ⏳",
+            "erro"
+          );
+
+          return;
+
+        }
+
+        abrirModalSenha(
+          item,
+          "sair"
+        );
+
+      }else{
+
+        abrirModalSenha(
+          item,
+          "voltar"
+        );
+
+      }
+
+    }
+  );
+
+
+  return div;
+
+}
+
+
+/* =========================================================
+   SELECT ALUNOS
+========================================================= */
+
+function atualizarSelectAlunos(){
+
+  Array
+    .from(
+      selectAluno.options
+    )
+    .forEach(opt=>{
+
+      if(!opt.value)
+        return;
+
+
+      const vezes =
+        state.counts[
+          opt.value
+        ] || 0;
+
+
+      if(
+        state.bloqueados[
+          opt.value
+        ]
+      ){
+
+        opt.disabled = true;
+
+        opt.textContent =
+          opt.value +
+          " (vice-direção)";
+
+      }
+
+      else if(vezes >= 3){
+
+        opt.disabled = true;
+
+        opt.textContent =
+          opt.value +
+          " (limite do dia atingido)";
+
+      }
+
+      else{
+
+        opt.disabled = false;
+
+        opt.textContent =
+          opt.value;
+
+      }
+
+    });
+
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render(){
+
+  const normal =
+    state.queue.filter(
+      i=>i.prioridade === "normal"
+    );
+
+
+  const baixa =
+    state.queue.filter(
+      i=>i.prioridade === "baixa"
+    );
+
+
+  const alguemFora =
+    state.queue.some(
+      i=>i.status === "fora"
+    );
+
+
+  const wrapNormal =
+    document.getElementById(
+      "filaNormal"
+    );
+
+
+  const wrapBaixa =
+    document.getElementById(
+      "filaBaixa"
+    );
+
+
+  wrapNormal.innerHTML = "";
+  wrapBaixa.innerHTML = "";
+
+
+  document.getElementById(
+    "countNormal"
+  ).textContent =
+    normal.length;
+
+
+  document.getElementById(
+    "countBaixa"
+  ).textContent =
+    baixa.length;
+
+
+  if(normal.length === 0){
+
+    wrapNormal.innerHTML =
+      '<div class="vazio">Ninguém na fila agora 🎉</div>';
+
+  }else{
+
+    normal.forEach(i=>{
+
+      wrapNormal.appendChild(
+        criaItemFila(
+          i,
+          alguemFora &&
+          i.status === "esperando"
+        )
+      );
+
+    });
+
+  }
+
+
+  document.getElementById(
+    "blocoBaixa"
+  ).style.display =
+    baixa.length
+      ? "block"
+      : "none";
+
+
+  baixa.forEach(i=>{
+
+    wrapBaixa.appendChild(
+      criaItemFila(
+        i,
+        alguemFora &&
+        i.status === "esperando"
+      )
+    );
+
+  });
+
+
+  const histWrap =
+    document.getElementById(
+      "historico"
+    );
+
+
+  histWrap.innerHTML = "";
+
+
+  if(state.history.length === 0){
+
+    histWrap.innerHTML =
+      '<div class="vazio">Ainda não há registros hoje.</div>';
+
+  }else{
+
+    state.history.forEach(
+      item=>{
+
+        const row =
+          document.createElement(
+            "div"
+          );
+
+        row.className =
+          "hist-item";
+
+
+        row.innerHTML = `
+
+          <div>
+
+            <div class="hist-nome">
+
+              ${item.aluno}
+
+              ${
+                item.estourou
+                  ? '<span class="flame" style="background:#FFE3E3;color:var(--vermelho-escuro);">🚨 vice-direção</span>'
+                  : ""
+              }
+
+            </div>
+
+            <div class="hist-detalhe">
+
+              ${item.horario.ini}–${item.horario.fim}
+
+              ·
+
+              ${item.saida
+                ? formataHora(item.saida)
+                : "—"}
+
+              →
+
+              ${item.volta
+                ? formataHora(item.volta)
+                : "—"}
+
+            </div>
+
+          </div>
+
+          <div class="hist-duracao">
+            ${formataDuracao(item.duracaoMs)}
+          </div>
+
+        `;
+
+
+        histWrap.appendChild(
+          row
+        );
+
+      }
+    );
+
+  }
+
+
+  atualizarSelectAlunos();
+
   renderHorarios();
 
-  // ---------- DATA NO HEADER ----------
-  document.getElementById("dataAtual").textContent = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+  atualizarCronometros();
 
-  // ---------- FORMATACAO ----------
-  function formataHora(ts){
-    return new Date(ts).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-  }
-  function formataCronometro(ms){
-    const totalSeg = Math.max(0, Math.floor(ms/1000));
-    const m = Math.floor(totalSeg/60);
-    const s = totalSeg%60;
-    return String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
-  }
-  function formataDuracao(ms){
-    const totalSeg = Math.floor(ms/1000);
-    const m = Math.floor(totalSeg/60);
-    const s = totalSeg%60;
-    return m + " min " + String(s).padStart(2,"0") + "s";
-  }
+}
 
-  // ---------- ENTRAR NA FILA ----------
-  document.getElementById("btnEntrar").addEventListener("click", async ()=>{
-    const aluno = selectAluno.value;
-    if(!aluno){
-      toast("Escolha um aluno primeiro!", "erro");
-      return;
-    }
-    if(state.bloqueados[aluno]){
-      toast(aluno + " foi encaminhado à vice-direção e não pode ir ao banheiro hoje. 🚨", "erro");
-      return;
-    }
-    if(horarioSelecionado === null){
-      toast("Escolha o horário da aula!", "erro");
-      return;
-    }
-    if(AULAS_BLOQUEADAS.includes(horarioSelecionado)){
-      toast("Não é permitido ir ao banheiro nessa aula! 🚫", "erro");
-      return;
-    }
-    {
-      const statusAtual = statusHorario(horarioSelecionado);
-      if(statusAtual === "futuro"){
-        toast("Essa aula ainda não começou! 🔒", "erro");
-        return;
-      }
-      if(statusAtual === "passado"){
-        toast("Essa aula já passou! ⏱️", "erro");
-        return;
-      }
-      if(statusAtual === "ultimos15"){
-        toast("Não é permitido nos últimos 15 min dessa aula! 🚫", "erro");
-        return;
-      }
-    }
-    const vezesHoje = state.counts[aluno] || 0;
-    if(vezesHoje >= 3){
-      toast(aluno + " já foi 3 vezes hoje, o limite do dia! 🛑", "erro");
-      return;
-    }
-    const jaFoiNestaAula = [...state.queue, ...state.history].some(i => i.aluno === aluno && i.horarioIdx === horarioSelecionado);
-    if(jaFoiNestaAula){
-      toast(aluno + " já foi ao banheiro nessa aula hoje!", "erro");
-      return;
-    }
-    const vezesBaixaHoje = state.baixaCounts[aluno] || 0;
-    const prioridade = vezesBaixaHoje >= 1 ? "baixa" : "normal";
-    const h = HORARIOS[horarioSelecionado];
-    const btnEntrar = document.getElementById("btnEntrar");
-    btnEntrar.disabled = true;
-    const { error } = await sb.from("registros").insert({
-      dia: diaAtual(),
-      aluno,
-      horario_idx: horarioSelecionado,
-      horario_ini: h.ini,
-      horario_fim: h.fim,
-      status: "esperando",
-      prioridade
-    });
-    btnEntrar.disabled = false;
-    if(error){
-      toast("Erro ao entrar na fila 😵", "erro");
-      console.error(error);
-      return;
-    }
-    selectAluno.value = "";
-    const idxNovo = horarioAtualIndex();
-    horarioSelecionado = (idxNovo >= 0 && !AULAS_BLOQUEADAS.includes(idxNovo)) ? idxNovo : null;
-    await carregarEstado();
-    render();
-    toast(aluno + " entrou na fila! ✋", "sucesso");
-  });
 
-  // ---------- LIMPEZA ----------
-  // Não precisa de botão: a fila e o histórico já são filtrados pelo dia
-  // atual (dia = diaAtual()), então todo dia novo começa vazio sozinho.
-  // Os registros de dias anteriores continuam guardados no Supabase,
-  // só não aparecem na tela.
+/* =========================================================
+   CRONÔMETRO
+========================================================= */
 
-  // ---------- MODAL DE SENHA ----------
-  const modalSenha = document.getElementById("modalSenha");
-  const modalSenhaSheet = modalSenha.querySelector(".modal-sheet");
-  const modalSenhaNome = document.getElementById("modalSenhaNome");
-  const modalSenhaInput = document.getElementById("modalSenhaInput");
-  const modalSenhaOlho = document.getElementById("modalSenhaOlho");
-  const modalSenhaConfirmar = document.getElementById("modalSenhaConfirmar");
-  const modalSenhaCancelar = document.getElementById("modalSenhaCancelar");
-  const modalSenhaTitulo = document.querySelector(".modal-titulo");
-  const modalSenhaSub = document.querySelector(".modal-sub");
-  let itemPendente = null;
-  let acaoPendente = null; // "sair" | "voltar"
+function atualizarCronometros(){
 
-  modalSenhaOlho.addEventListener("click", ()=>{
-    const mostrando = modalSenhaInput.type === "text";
-    modalSenhaInput.type = mostrando ? "password" : "text";
-    modalSenhaOlho.textContent = mostrando ? "👁️" : "🙈";
-    modalSenhaOlho.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Esconder senha");
-    modalSenhaInput.focus();
-  });
+  document
+    .querySelectorAll(
+      ".cronometro"
+    )
+    .forEach(el=>{
 
-  function abrirModalSenha(item, acao){
-    itemPendente = item;
-    acaoPendente = acao;
-    modalSenhaNome.textContent = item.aluno;
-    if(acao === "voltar"){
-      modalSenhaSub.textContent = "Só quem voltou do banheiro digita a própria senha.";
-      modalSenhaConfirmar.textContent = "Confirmar volta";
-    }else{
-      modalSenhaSub.textContent = "Só quem vai ao banheiro digita a própria senha.";
-      modalSenhaConfirmar.textContent = "Confirmar saída";
-    }
-    modalSenhaInput.value = "";
-    modalSenhaInput.type = "password";
-    modalSenhaOlho.textContent = "👁️";
-    modalSenhaOlho.setAttribute("aria-label", "Mostrar senha");
-    modalSenha.classList.add("show");
-    setTimeout(()=> modalSenhaInput.focus(), 100);
-  }
+      const saida =
+        Number(
+          el.dataset.saida
+        );
 
-  function fecharModalSenha(){
-    modalSenha.classList.remove("show");
-    itemPendente = null;
-    acaoPendente = null;
-  }
 
-  async function confirmarModalSenha(){
-    if(!itemPendente || !modalSenhaInput.value){
-      if(itemPendente) modalSenhaInput.focus();
-      return;
-    }
-    const digitada = modalSenhaInput.value;
-    const aluno = itemPendente.aluno;
-    const id = itemPendente.id;
-    const acao = acaoPendente;
-    modalSenhaConfirmar.disabled = true;
-    const { data: ok, error } = await sb.rpc("verificar_senha", { p_aluno: aluno, p_senha: digitada });
-    modalSenhaConfirmar.disabled = false;
-    if(error){
-      toast("Erro ao verificar a senha 😵", "erro");
-      console.error(error);
-      return;
-    }
-    if(ok){
-      fecharModalSenha();
-      if(acao === "voltar"){
-        await marcarVolta(id);
-      }else{
-        await marcarSaida(id);
-      }
-    }else{
-      toast("Senha incorreta! 🔒", "erro");
-      modalSenhaSheet.classList.remove("tremer");
-      void modalSenhaSheet.offsetWidth;
-      modalSenhaSheet.classList.add("tremer");
-      modalSenhaInput.value = "";
-      modalSenhaInput.focus();
-    }
-  }
+      const restante =
+        LIMITE_MS -
+        (
+          agoraServidor() -
+          saida
+        );
 
-  modalSenhaConfirmar.addEventListener("click", confirmarModalSenha);
-  modalSenhaCancelar.addEventListener("click", fecharModalSenha);
-  modalSenha.addEventListener("click", (e)=>{ if(e.target === modalSenha) fecharModalSenha(); });
-  modalSenhaInput.addEventListener("keydown", (e)=>{ if(e.key === "Enter") confirmarModalSenha(); });
 
-  // ---------- CONFIRMAR SAÍDA ----------
-  async function marcarSaida(id){
-    const alguemFora = state.queue.some(i => i.status === "fora");
-    if(alguemFora){
-      const quem = state.queue.find(i => i.status === "fora");
-      toast(quem.aluno + " está no banheiro. Espere ele(a) voltar! ⏳", "erro");
-      return;
-    }
-    const item = state.queue.find(i=>i.id === id);
-    if(!item) return;
-    // Não enviamos o horário daqui: um trigger no banco preenche "saida"
-    // com now() do Postgres, garantindo que o horário registrado seja
-    // sempre o do servidor, e não o do celular/computador usado.
-    const { error } = await sb.from("registros")
-      .update({ status: "fora" })
-      .eq("id", id);
-    if(error){ toast("Erro ao registrar saída 😵", "erro"); console.error(error); return; }
-    await carregarEstado();
-    render();
-    toast(item.aluno + " saiu! 🚪", "sucesso");
-  }
-
-  // ---------- ESTOURO DE TEMPO ----------
-  async function tratarEstouro(id){
-    const item = state.queue.find(i => i.id === id);
-    if(!item || item.estourou) return;
-    item.estourou = true; // trava otimista pra não disparar de novo antes do refetch
-    const { error } = await sb.from("registros").update({ estourou: true }).eq("id", id);
-    if(error){ console.error(error); return; }
-    await sb.from("bloqueios").upsert({ aluno: item.aluno, dia: diaAtual() });
-    await carregarEstado();
-    render();
-    toast(item.aluno + " estourou os 7 min! Encaminhado à vice-direção 🚨", "erro");
-  }
-
-  // ---------- VOLTOU ----------
-  async function marcarVolta(id){
-    const item = state.queue.find(i=>i.id === id);
-    if(!item || item.status !== "fora") return;
-    // Idem: "volta" e "duracao_ms" são calculados pelo trigger no banco,
-    // com base no relógio do servidor, não no do aparelho.
-    const { error } = await sb.from("registros")
-      .update({ status: "concluido" })
-      .eq("id", id);
-    if(error){ toast("Erro ao registrar volta 😵", "erro"); console.error(error); return; }
-    await carregarEstado();
-    render();
-    toast(item.aluno + " voltou! ✅", "sucesso");
-  }
-
-  // ---------- RENDER FILA ----------
-  function criaItemFila(item, bloquearSaida){
-    const div = document.createElement("div");
-    div.className = "fila-item" + (item.prioridade === "baixa" ? " baixa" : "") + (item.status === "fora" ? " fora" : "") + (item.estourou ? " estourou" : "");
-
-    const flame = item.prioridade === "baixa" ? '<span class="flame">🔥 já foi hoje</span>' : '';
-
-    let sub, botao;
-    if(item.status === "esperando"){
-      sub = `${item.horario.ini}–${item.horario.fim} · <span class="status-espera">aguardando autorização</span>`;
-      botao = `<button class="btn-mini ${bloquearSaida ? 'btn-cinza' : 'btn-verde-mini'}" data-acao="sair" data-id="${item.id}">Confirmar saída</button>`;
-    }else if(item.estourou){
-      sub = `${item.horario.ini}–${item.horario.fim} · saiu às ${formataHora(item.saida)} · <span class="aviso-estourado">🚨 tempo esgotado — vice-direção</span>`;
-      botao = `<button class="btn-mini btn-azul" data-acao="voltou" data-id="${item.id}">Voltou</button>`;
-    }else{
-      sub = `${item.horario.ini}–${item.horario.fim} · saiu às ${formataHora(item.saida)} · <span class="cronometro" data-saida="${item.saida}" data-id="${item.id}">07:00</span>`;
-      botao = `<button class="btn-mini btn-azul" data-acao="voltou" data-id="${item.id}">Voltou</button>`;
-    }
-
-    div.innerHTML = `
-      <div class="avatar">${iniciais(item.aluno)}</div>
-      <div class="fila-info">
-        <div class="nome">${item.aluno} ${flame}</div>
-        <div class="sub">${sub}</div>
-      </div>
-      ${botao}
-    `;
-    const btn = div.querySelector("button");
-    btn.addEventListener("click", ()=>{
-      if(btn.dataset.acao === "sair"){
-        if(bloquearSaida){
-          const quem = state.queue.find(i => i.status === "fora");
-          toast((quem ? quem.aluno : "Alguém") + " está no banheiro. Espere ele(a) voltar! ⏳", "erro");
-          return;
-        }
-        abrirModalSenha(item, "sair");
-      }else{
-        abrirModalSenha(item, "voltar");
-      }
-    });
-    return div;
-  }
-
-  function atualizarSelectAlunos(){
-    Array.from(selectAluno.options).forEach(opt=>{
-      if(!opt.value) return;
-      const vezes = state.counts[opt.value] || 0;
-      if(state.bloqueados[opt.value]){
-        opt.disabled = true;
-        opt.textContent = opt.value + " (vice-direção)";
-      }else if(vezes >= 3){
-        opt.disabled = true;
-        opt.textContent = opt.value + " (limite do dia atingido)";
-      }else{
-        opt.disabled = false;
-        opt.textContent = opt.value;
-      }
-    });
-  }
-
-  function render(){
-    const normal = state.queue.filter(i=>i.prioridade === "normal");
-    const baixa = state.queue.filter(i=>i.prioridade === "baixa");
-    const alguemFora = state.queue.some(i => i.status === "fora");
-
-    const wrapNormal = document.getElementById("filaNormal");
-    const wrapBaixa = document.getElementById("filaBaixa");
-    wrapNormal.innerHTML = "";
-    wrapBaixa.innerHTML = "";
-
-    document.getElementById("countNormal").textContent = normal.length;
-    document.getElementById("countBaixa").textContent = baixa.length;
-
-    if(normal.length === 0){
-      wrapNormal.innerHTML = '<div class="vazio">Ninguém na fila agora 🎉</div>';
-    }else{
-      normal.forEach(i=> wrapNormal.appendChild(criaItemFila(i, alguemFora && i.status === "esperando")));
-    }
-
-    document.getElementById("blocoBaixa").style.display = baixa.length ? "block" : "none";
-    baixa.forEach(i=> wrapBaixa.appendChild(criaItemFila(i, alguemFora && i.status === "esperando")));
-
-    const histWrap = document.getElementById("historico");
-    histWrap.innerHTML = "";
-    if(state.history.length === 0){
-      histWrap.innerHTML = '<div class="vazio">Ainda não há registros hoje.</div>';
-    }else{
-      state.history.forEach(item=>{
-        const row = document.createElement("div");
-        row.className = "hist-item";
-        row.innerHTML = `
-          <div>
-            <div class="hist-nome">${item.aluno} ${item.estourou ? '<span class="flame" style="background:#FFE3E3;color:var(--vermelho-escuro);">🚨 vice-direção</span>' : ''}</div>
-            <div class="hist-detalhe">${item.horario.ini}–${item.horario.fim} · ${formataHora(item.saida)} → ${formataHora(item.volta)}</div>
-          </div>
-          <div class="hist-duracao">${formataDuracao(item.duracaoMs)}</div>
-        `;
-        histWrap.appendChild(row);
-      });
-    }
-
-    atualizarSelectAlunos();
-    renderHorarios();
-    atualizarCronometros();
-  }
-
-  // ---------- CRONOMETRO AO VIVO (regressivo, 7 min) ----------
-  function atualizarCronometros(){
-    document.querySelectorAll(".cronometro").forEach(el=>{
-      const saida = Number(el.dataset.saida);
-      const restante = LIMITE_MS - (agoraServidor() - saida);
       if(restante <= 0){
-        el.textContent = "00:00";
-        tratarEstouro(el.dataset.id);
+
+        el.textContent =
+          "00:00";
+
+        tratarEstouro(
+          el.dataset.id
+        );
+
       }else{
-        el.textContent = formataCronometro(restante);
-        el.classList.toggle("alerta", restante <= 60000);
+
+        el.textContent =
+          formataCronometro(
+            restante
+          );
+
+
+        el.classList.toggle(
+          "alerta",
+          restante <= 60000
+        );
+
       }
+
     });
-  }
-  setInterval(()=>{
+
+}
+
+
+setInterval(
+  ()=>{
     atualizarCronometros();
     renderHorarios();
-  }, 1000);
+  },
+  1000
+);
 
-  // ---------- REALTIME: mantém todos os aparelhos sincronizados ----------
-  sb.channel("fila-banheiro-realtime")
-    .on("postgres_changes", { event: "*", schema: "public", table: "registros" }, async ()=>{
-      await carregarEstado();
-      render();
-    })
-    .on("postgres_changes", { event: "*", schema: "public", table: "bloqueios" }, async ()=>{
-      await carregarEstado();
-      render();
-    })
-    .subscribe();
 
-  // ---------- CARGA INICIAL ----------
-  (async function iniciar(){
-    await sincronizarRelogio();
+/* =========================================================
+   REALTIME
+========================================================= */
+
+sb.channel(
+  "fila-banheiro-realtime"
+)
+
+.on(
+  "postgres_changes",
+  {
+    event:"*",
+    schema:"public",
+    table:"registros"
+  },
+  async ()=>{
     await carregarEstado();
     render();
-  })();
+  }
+)
 
-  // Resincroniza a cada 1 min para corrigir qualquer desvio de relógio
-  // que apareça ao longo do dia (ex.: aparelho sem hora automática).
-  setInterval(sincronizarRelogio, 60 * 1000);
+.on(
+  "postgres_changes",
+  {
+    event:"*",
+    schema:"public",
+    table:"bloqueios"
+  },
+  async ()=>{
+    await carregarEstado();
+    render();
+  }
+)
 
-  // ---------- ÁREA DO ADMINISTRADOR ----------
-  // A senha de admin é a mesma do aluno "Matheus Candido", conferida
-  // no Supabase (função admin_login, que reaproveita verificar_senha).
-  // O acesso ao painel só funciona com um token de sessão emitido pelo
-  // banco (admin_sessions), nunca por uma senha fixa aqui no JS.
-  let adminToken = null;
-  let adminAlunos = [];
+.subscribe();
 
-  const btnAdmin = document.getElementById("btnAdmin");
-  const modalAdminLogin = document.getElementById("modalAdminLogin");
-  const adminLoginInput = document.getElementById("adminLoginInput");
-  const adminLoginOlho = document.getElementById("adminLoginOlho");
-  const adminLoginConfirmar = document.getElementById("adminLoginConfirmar");
-  const adminLoginCancelar = document.getElementById("adminLoginCancelar");
-  const painelAdmin = document.getElementById("painelAdmin");
-  const adminLista = document.getElementById("adminLista");
-  const adminFechar = document.getElementById("adminFechar");
 
-  btnAdmin.addEventListener("click", ()=>{
+/* =========================================================
+   CARGA INICIAL
+========================================================= */
+
+(async function iniciar(){
+
+  await sincronizarRelogio();
+
+  await carregarEstado();
+
+  render();
+
+})();
+
+
+setInterval(
+  sincronizarRelogio,
+  60 * 1000
+);
+
+
+/* =========================================================
+   ADMIN
+========================================================= */
+
+let adminToken = null;
+let adminAlunos = [];
+
+
+const btnAdmin =
+  document.getElementById(
+    "btnAdmin"
+  );
+
+const modalAdminLogin =
+  document.getElementById(
+    "modalAdminLogin"
+  );
+
+const adminLoginInput =
+  document.getElementById(
+    "adminLoginInput"
+  );
+
+const adminLoginOlho =
+  document.getElementById(
+    "adminLoginOlho"
+  );
+
+const adminLoginConfirmar =
+  document.getElementById(
+    "adminLoginConfirmar"
+  );
+
+const adminLoginCancelar =
+  document.getElementById(
+    "adminLoginCancelar"
+  );
+
+const painelAdmin =
+  document.getElementById(
+    "painelAdmin"
+  );
+
+const adminLista =
+  document.getElementById(
+    "adminLista"
+  );
+
+const adminFechar =
+  document.getElementById(
+    "adminFechar"
+  );
+
+
+/* =========================================================
+   LOGIN ADMIN
+========================================================= */
+
+btnAdmin.addEventListener(
+  "click",
+  ()=>{
+
     adminLoginInput.value = "";
-    adminLoginInput.type = "password";
-    adminLoginOlho.textContent = "👁️";
-    modalAdminLogin.classList.add("show");
-    setTimeout(()=> adminLoginInput.focus(), 100);
-  });
 
-  adminLoginOlho.addEventListener("click", ()=>{
-    const mostrando = adminLoginInput.type === "text";
-    adminLoginInput.type = mostrando ? "password" : "text";
-    adminLoginOlho.textContent = mostrando ? "👁️" : "🙈";
+    adminLoginInput.type =
+      "password";
+
+    adminLoginOlho.textContent =
+      "👁️";
+
+    modalAdminLogin
+      .classList
+      .add("show");
+
+    setTimeout(
+      ()=>adminLoginInput.focus(),
+      100
+    );
+
+  }
+);
+
+
+adminLoginOlho.addEventListener(
+  "click",
+  ()=>{
+
+    const mostrando =
+      adminLoginInput.type ===
+      "text";
+
+
+    adminLoginInput.type =
+      mostrando
+        ? "password"
+        : "text";
+
+
+    adminLoginOlho.textContent =
+      mostrando
+        ? "👁️"
+        : "🙈";
+
+
     adminLoginInput.focus();
-  });
 
-  function fecharModalAdminLogin(){
-    modalAdminLogin.classList.remove("show");
   }
-  adminLoginCancelar.addEventListener("click", fecharModalAdminLogin);
-  modalAdminLogin.addEventListener("click", (e)=>{ if(e.target === modalAdminLogin) fecharModalAdminLogin(); });
-  adminLoginInput.addEventListener("keydown", (e)=>{ if(e.key === "Enter") confirmarAdminLogin(); });
+);
 
-  async function confirmarAdminLogin(){
-    const senha = adminLoginInput.value;
-    if(!senha){ adminLoginInput.focus(); return; }
-    adminLoginConfirmar.disabled = true;
-    const { data, error } = await sb.rpc("admin_login", { p_senha: senha });
-    adminLoginConfirmar.disabled = false;
-    if(error || !data){
-      toast("Senha de administrador incorreta! 🔒", "erro");
-      const sheet = modalAdminLogin.querySelector(".modal-sheet");
-      sheet.classList.remove("tremer");
-      void sheet.offsetWidth;
-      sheet.classList.add("tremer");
-      adminLoginInput.value = "";
-      adminLoginInput.focus();
-      return;
+
+function fecharModalAdminLogin(){
+
+  modalAdminLogin
+    .classList
+    .remove("show");
+
+}
+
+
+adminLoginCancelar.addEventListener(
+  "click",
+  fecharModalAdminLogin
+);
+
+
+modalAdminLogin.addEventListener(
+  "click",
+  e=>{
+    if(
+      e.target ===
+      modalAdminLogin
+    ){
+      fecharModalAdminLogin();
     }
-    adminToken = data;
-    fecharModalAdminLogin();
-    await abrirPainelAdmin();
   }
-  adminLoginConfirmar.addEventListener("click", confirmarAdminLogin);
+);
 
-  async function abrirPainelAdmin(){
-    painelAdmin.classList.add("show");
-    await carregarAdminAlunos();
+
+adminLoginInput.addEventListener(
+  "keydown",
+  e=>{
+    if(e.key === "Enter")
+      confirmarAdminLogin();
+  }
+);
+
+
+async function confirmarAdminLogin(){
+
+  const senha =
+    adminLoginInput.value;
+
+
+  if(!senha){
+
+    adminLoginInput.focus();
+
+    return;
+
   }
 
-  async function carregarAdminAlunos(){
-    adminLista.innerHTML = '<div class="vazio">Carregando...</div>';
-    const { data, error } = await sb.rpc("admin_listar_alunos", { p_token: adminToken, p_dia: diaAtual() });
+
+  adminLoginConfirmar.disabled =
+    true;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "admin_login",
+      {
+        p_senha:senha
+      }
+    );
+
+
+  adminLoginConfirmar.disabled =
+    false;
+
+
+  if(error || !data){
+
+    toast(
+      "Senha de administrador incorreta! 🔒",
+      "erro"
+    );
+
+
+    const sheet =
+      modalAdminLogin.querySelector(
+        ".modal-sheet"
+      );
+
+
+    sheet.classList.remove(
+      "tremer"
+    );
+
+    void sheet.offsetWidth;
+
+    sheet.classList.add(
+      "tremer"
+    );
+
+
+    adminLoginInput.value = "";
+
+    adminLoginInput.focus();
+
+    return;
+
+  }
+
+
+  adminToken = data;
+
+  fecharModalAdminLogin();
+
+  await abrirPainelAdmin();
+
+}
+
+
+adminLoginConfirmar.addEventListener(
+  "click",
+  confirmarAdminLogin
+);
+
+
+/* =========================================================
+   ABRIR PAINEL
+========================================================= */
+
+async function abrirPainelAdmin(){
+
+  painelAdmin
+    .classList
+    .add("show");
+
+  await carregarAdminAlunos();
+
+}
+
+
+/* =========================================================
+   CARREGAR ALUNOS ADMIN
+========================================================= */
+
+async function carregarAdminAlunos(){
+
+  adminLista.innerHTML =
+    '<div class="vazio">Carregando...</div>';
+
+
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "admin_listar_alunos",
+      {
+        p_token:adminToken,
+        p_dia:diaAtual()
+      }
+    );
+
+
+  if(error){
+
+    console.error(
+      "Erro ao carregar painel administrativo:",
+      error
+    );
+
+
+    const msg =
+      (
+        error.message ||
+        ""
+      ).toLowerCase();
+
+
+    const sessaoInvalida =
+      msg.includes(
+        "sessão de administrador inválida"
+      ) ||
+      msg.includes(
+        "sessao de administrador invalida"
+      ) ||
+      msg.includes(
+        "expirada"
+      );
+
+
+    if(sessaoInvalida){
+
+      toast(
+        "Sessão de administrador expirou. Entre novamente. 🔒",
+        "erro"
+      );
+
+      adminToken = null;
+
+      painelAdmin
+        .classList
+        .remove("show");
+
+    }else{
+
+      toast(
+        "Erro ao carregar o painel: " +
+        (
+          error.message ||
+          "verifique o Supabase"
+        ),
+        "erro"
+      );
+
+
+      adminLista.innerHTML =
+        '<div class="vazio">Não foi possível carregar o painel. Verifique se o SQL do painel administrativo foi executado corretamente no Supabase.</div>';
+
+    }
+
+    return;
+
+  }
+
+
+  adminAlunos =
+    data || [];
+
+
+  renderAdminLista();
+
+}
+
+
+/* =========================================================
+   TIRAR PRIORIDADE BAIXA
+========================================================= */
+
+async function tirarPrioridadeAluno(
+  aluno,
+  btnEl
+){
+
+  if(!adminToken)
+    return;
+
+
+  if(btnEl)
+    btnEl.disabled = true;
+
+
+  const registrosBaixa =
+    [
+      ...state.queue,
+      ...state.history
+    ]
+    .filter(
+      i =>
+        i.aluno === aluno &&
+        i.prioridade === "baixa"
+    );
+
+
+  if(
+    registrosBaixa.length === 0
+  ){
+
+    if(btnEl)
+      btnEl.disabled = false;
+
+
+    toast(
+      aluno +
+      " não está com prioridade baixa hoje.",
+      "erro"
+    );
+
+    return;
+
+  }
+
+
+  for(
+    const item of registrosBaixa
+  ){
+
+    const {
+      error
+    } =
+      await sb.rpc(
+        "admin_remover_prioridade_baixa",
+        {
+          p_token:adminToken,
+          p_id:item.id
+        }
+      );
+
+
     if(error){
-      console.error("Erro ao carregar painel administrativo:", error);
-      const msg = (error.message || "").toLowerCase();
-      const sessaoInvalida = msg.includes("sessão de administrador inválida") || msg.includes("sessao de administrador invalida") || msg.includes("expirada");
-      if(sessaoInvalida){
-        toast("Sessão de administrador expirou. Entre novamente. 🔒", "erro");
+
+      console.error(
+        "Erro ao tirar prioridade baixa:",
+        error
+      );
+
+
+      if(btnEl)
+        btnEl.disabled = false;
+
+
+      const msg =
+        (
+          error.message ||
+          ""
+        ).toLowerCase();
+
+
+      if(
+        msg.includes(
+          "sessão de administrador inválida"
+        ) ||
+        msg.includes(
+          "sessao de administrador invalida"
+        ) ||
+        msg.includes(
+          "expirada"
+        )
+      ){
+
+        toast(
+          "Sessão de administrador expirou. Entre novamente. 🔒",
+          "erro"
+        );
+
         adminToken = null;
-        painelAdmin.classList.remove("show");
+
+        painelAdmin
+          .classList
+          .remove("show");
+
       }else{
-        toast("Erro ao carregar o painel: " + (error.message || "verifique o Supabase"), "erro");
-        adminLista.innerHTML = '<div class="vazio">Não foi possível carregar o painel. Verifique se o SQL do painel administrativo foi executado corretamente no Supabase.</div>';
+
+        toast(
+          "Erro ao tirar prioridade baixa: " +
+          (
+            error.message ||
+            "verifique o Supabase"
+          ),
+          "erro"
+        );
+
       }
+
       return;
+
     }
-    adminAlunos = data || [];
-    renderAdminLista();
+
   }
 
-  async function tirarPrioridadeAluno(aluno, btnEl){
-    if(!adminToken) return;
-    if(btnEl) btnEl.disabled = true;
 
-    // Procura todos os registros de hoje desse aluno que ainda estão com
-    // prioridade baixa. Isso funciona mesmo se ele já saiu da fila, pois
-    // registros concluídos continuam em state.history.
-    const registrosBaixa = [...state.queue, ...state.history]
-      .filter(i => i.aluno === aluno && i.prioridade === "baixa");
+  toast(
+    aluno +
+    " ficou com prioridade normal novamente! ⭐",
+    "sucesso"
+  );
 
-    if(registrosBaixa.length === 0){
-      if(btnEl) btnEl.disabled = false;
-      toast(aluno + " não está com prioridade baixa hoje.", "erro");
-      return;
+
+  await carregarEstado();
+
+  render();
+
+  await carregarAdminAlunos();
+
+}
+
+
+/* =========================================================
+   BLOQUEAR ALUNO
+========================================================= */
+
+async function bloquearAluno(
+  aluno,
+  btnEl
+){
+
+  if(!adminToken)
+    return;
+
+
+  if(btnEl)
+    btnEl.disabled = true;
+
+
+  const {
+    error
+  } =
+    await sb.rpc(
+      "admin_bloquear_aluno",
+      {
+        p_token:adminToken,
+        p_aluno:aluno,
+        p_dia:diaAtual()
+      }
+    );
+
+
+  if(error){
+
+    console.error(
+      "Erro ao bloquear aluno:",
+      error
+    );
+
+
+    const msg =
+      (
+        error.message ||
+        ""
+      ).toLowerCase();
+
+
+    const sessaoInvalida =
+      msg.includes(
+        "sessão de administrador inválida"
+      ) ||
+      msg.includes(
+        "sessao de administrador invalida"
+      ) ||
+      msg.includes(
+        "expirada"
+      );
+
+
+    if(sessaoInvalida){
+
+      toast(
+        "Sessão expirada. Entre novamente. 🔒",
+        "erro"
+      );
+
+      adminToken = null;
+
+      painelAdmin
+        .classList
+        .remove("show");
+
+    }else{
+
+      toast(
+        "Erro ao bloquear: " +
+        (
+          error.message ||
+          "verifique o Supabase"
+        ),
+        "erro"
+      );
+
+
+      if(btnEl)
+        btnEl.disabled = false;
+
     }
 
-    for(const item of registrosBaixa){
-      const { error } = await sb.rpc("admin_remover_prioridade_baixa", {
-        p_token: adminToken,
-        p_id: item.id
-      });
-      if(error){
-        console.error("Erro ao tirar prioridade baixa:", error);
-        if(btnEl) btnEl.disabled = false;
-        const msg = (error.message || "").toLowerCase();
-        if(msg.includes("sessão de administrador inválida") || msg.includes("sessao de administrador invalida") || msg.includes("expirada")){
-          toast("Sessão de administrador expirou. Entre novamente. 🔒", "erro");
-          adminToken = null;
-          painelAdmin.classList.remove("show");
-        }else{
-          toast("Erro ao tirar prioridade baixa: " + (error.message || "verifique o Supabase"), "erro");
+    return;
+
+  }
+
+
+  toast(
+    aluno +
+    " foi bloqueado(a)! 🚨",
+    "erro"
+  );
+
+
+  await carregarEstado();
+
+  render();
+
+  await carregarAdminAlunos();
+
+}
+
+
+/* =========================================================
+   DESBLOQUEAR ALUNO
+========================================================= */
+
+async function desbloquearAluno(
+  aluno,
+  btnEl
+){
+
+  if(!adminToken)
+    return;
+
+
+  if(btnEl)
+    btnEl.disabled = true;
+
+
+  const {
+    error
+  } =
+    await sb.rpc(
+      "admin_remover_bloqueio",
+      {
+        p_token:adminToken,
+        p_aluno:aluno,
+        p_dia:diaAtual()
+      }
+    );
+
+
+  if(error){
+
+    console.error(
+      "Erro ao remover bloqueio:",
+      error
+    );
+
+
+    const msg =
+      (
+        error.message ||
+        ""
+      ).toLowerCase();
+
+
+    const sessaoInvalida =
+      msg.includes(
+        "sessão de administrador inválida"
+      ) ||
+      msg.includes(
+        "sessao de administrador invalida"
+      ) ||
+      msg.includes(
+        "expirada"
+      );
+
+
+    if(sessaoInvalida){
+
+      toast(
+        "Sessão expirada. Entre novamente. 🔒",
+        "erro"
+      );
+
+      adminToken = null;
+
+      painelAdmin
+        .classList
+        .remove("show");
+
+    }else{
+
+      toast(
+        "Erro ao remover bloqueio: " +
+        (
+          error.message ||
+          "verifique o Supabase"
+        ),
+        "erro"
+      );
+
+
+      if(btnEl)
+        btnEl.disabled = false;
+
+    }
+
+    return;
+
+  }
+
+
+  toast(
+    aluno +
+    " liberado(a) para usar o sistema novamente! ✅",
+    "sucesso"
+  );
+
+
+  await carregarEstado();
+
+  render();
+
+  await carregarAdminAlunos();
+
+}
+
+
+/* =========================================================
+   RENDER ADMIN
+========================================================= */
+
+function renderAdminLista(){
+
+  adminLista.innerHTML = "";
+
+
+  if(
+    adminAlunos.length === 0
+  ){
+
+    adminLista.innerHTML =
+      '<div class="vazio">Nenhum aluno encontrado.</div>';
+
+    return;
+
+  }
+
+
+  adminAlunos.forEach(a=>{
+
+    const senhaDisponivel =
+      a.senha_texto !== null &&
+      a.senha_texto !== undefined;
+
+
+    const row =
+      document.createElement(
+        "div"
+      );
+
+
+    row.className =
+      "admin-item";
+
+
+    row.innerHTML = `
+
+      <div class="admin-nome">
+
+        ${a.aluno}
+
+        ${
+          a.bloqueado
+
+            ? `
+              <span class="admin-tag-bloqueado">
+                🚨 bloqueado
+              </span>
+            `
+
+            : `
+              <span class="admin-tag-liberado">
+                ✅ liberado
+              </span>
+            `
         }
-        return;
+
+      </div>
+
+
+      <div
+        class="admin-senha"
+        data-mostrando="false"
+      >
+        ••••••••
+      </div>
+
+
+      <button
+        type="button"
+        class="admin-olho"
+        aria-label="Mostrar senha"
+      >
+        👁️
+      </button>
+
+
+      <button
+        type="button"
+        class="btn-mini btn-azul"
+        data-tirar-prioridade="1"
+      >
+        ⭐ Tirar prioridade baixa
+      </button>
+
+
+      ${
+        a.bloqueado
+
+          ? `
+            <button
+              type="button"
+              class="btn-mini btn-verde-mini"
+              data-desbloquear="1"
+            >
+              🔓 Desbloquear
+            </button>
+          `
+
+          : `
+            <button
+              type="button"
+              class="btn-mini"
+              style="
+                background:var(--vermelho);
+                box-shadow:0 3px 0 var(--vermelho-escuro);
+              "
+              data-bloquear="1"
+            >
+              🔒 Bloquear
+            </button>
+          `
       }
-    }
 
-    toast(aluno + " ficou com prioridade normal novamente! ⭐", "sucesso");
-    await carregarEstado();
-    render();
-    await carregarAdminAlunos();
-  }
+    `;
 
-  function renderAdminLista(){
-    adminLista.innerHTML = "";
-    if(adminAlunos.length === 0){
-      adminLista.innerHTML = '<div class="vazio">Nenhum aluno encontrado.</div>';
-      return;
-    }
-    adminAlunos.forEach(a=>{
-      const senhaDisponivel = a.senha_texto !== null && a.senha_texto !== undefined;
-      const row = document.createElement("div");
-      row.className = "admin-item";
-      row.innerHTML = `
-        <div class="admin-nome">${a.aluno} ${a.bloqueado ? '<span class="admin-tag-bloqueado">🚨 bloqueado</span>' : ''}</div>
-        <div class="admin-senha" data-mostrando="false">••••••••</div>
-        <button type="button" class="admin-olho" aria-label="Mostrar senha">👁️</button>
-        <button type="button" class="btn-mini btn-azul" data-tirar-prioridade="1">⭐ Tirar prioridade baixa</button>
-        ${a.bloqueado ? '<button type="button" class="btn-mini btn-azul" data-desbloquear="1">Remover bloqueio</button>' : ''}
-      `;
-      const senhaEl = row.querySelector(".admin-senha");
-      const olhoEl = row.querySelector(".admin-olho");
-      olhoEl.addEventListener("click", ()=>{
-        const mostrando = senhaEl.dataset.mostrando === "true";
+
+    /* SENHA */
+
+    const senhaEl =
+      row.querySelector(
+        ".admin-senha"
+      );
+
+
+    const olhoEl =
+      row.querySelector(
+        ".admin-olho"
+      );
+
+
+    olhoEl.addEventListener(
+      "click",
+      ()=>{
+
+        const mostrando =
+          senhaEl.dataset.mostrando ===
+          "true";
+
+
         if(mostrando){
-          senhaEl.textContent = "••••••••";
-          senhaEl.dataset.mostrando = "false";
-          olhoEl.textContent = "👁️";
+
+          senhaEl.textContent =
+            "••••••••";
+
+          senhaEl.dataset.mostrando =
+            "false";
+
+          olhoEl.textContent =
+            "👁️";
+
         }else{
-          senhaEl.textContent = senhaDisponivel ? a.senha_texto : "não disponível";
-          senhaEl.dataset.mostrando = "true";
-          olhoEl.textContent = "🙈";
+
+          senhaEl.textContent =
+            senhaDisponivel
+              ? a.senha_texto
+              : "não disponível";
+
+          senhaEl.dataset.mostrando =
+            "true";
+
+          olhoEl.textContent =
+            "🙈";
+
         }
-      });
-      const btnPrioridade = row.querySelector("[data-tirar-prioridade]");
-      if(btnPrioridade){
-        btnPrioridade.addEventListener("click", ()=> tirarPrioridadeAluno(a.aluno, btnPrioridade));
-      }
 
-      const btnDesbloq = row.querySelector("[data-desbloquear]");
-      if(btnDesbloq){
-        btnDesbloq.addEventListener("click", async ()=>{
-          btnDesbloq.disabled = true;
-          const { error } = await sb.rpc("admin_remover_bloqueio", { p_token: adminToken, p_aluno: a.aluno, p_dia: diaAtual() });
-          if(error){
-            console.error("Erro ao remover bloqueio:", error);
-            const msg = (error.message || "").toLowerCase();
-            if(msg.includes("sessão de administrador inválida") || msg.includes("sessao de administrador invalida") || msg.includes("expirada")){
-              toast("Sessão expirada. Entre novamente. 🔒", "erro");
-              adminToken = null;
-              painelAdmin.classList.remove("show");
-            }else{
-              toast("Erro ao remover bloqueio: " + (error.message || "verifique o Supabase"), "erro");
-              btnDesbloq.disabled = false;
-            }
+      }
+    );
+
+
+    /* PRIORIDADE */
+
+    const btnPrioridade =
+      row.querySelector(
+        "[data-tirar-prioridade]"
+      );
+
+
+    if(btnPrioridade){
+
+      btnPrioridade.addEventListener(
+        "click",
+        ()=>{
+
+          tirarPrioridadeAluno(
+            a.aluno,
+            btnPrioridade
+          );
+
+        }
+      );
+
+    }
+
+
+    /* BLOQUEAR */
+
+    const btnBloquear =
+      row.querySelector(
+        "[data-bloquear]"
+      );
+
+
+    if(btnBloquear){
+
+      btnBloquear.addEventListener(
+        "click",
+        async ()=>{
+
+          const confirmar =
+            confirm(
+              "Tem certeza que deseja bloquear " +
+              a.aluno +
+              " hoje?\n\n" +
+              "O aluno não poderá entrar na fila do banheiro."
+            );
+
+
+          if(!confirmar)
             return;
-          }
-          toast(a.aluno + " liberado(a) para usar o sistema novamente! ✅", "sucesso");
-          await carregarEstado();
-          render();
-          await carregarAdminAlunos();
-        });
-      }
-      adminLista.appendChild(row);
-    });
-  }
 
-  adminFechar.addEventListener("click", ()=>{
-    painelAdmin.classList.remove("show");
+
+          await bloquearAluno(
+            a.aluno,
+            btnBloquear
+          );
+
+        }
+      );
+
+    }
+
+
+    /* DESBLOQUEAR */
+
+    const btnDesbloquear =
+      row.querySelector(
+        "[data-desbloquear]"
+      );
+
+
+    if(btnDesbloquear){
+
+      btnDesbloquear.addEventListener(
+        "click",
+        async ()=>{
+
+          const confirmar =
+            confirm(
+              "Deseja desbloquear " +
+              a.aluno +
+              "?\n\n" +
+              "O aluno poderá usar o sistema novamente."
+            );
+
+
+          if(!confirmar)
+            return;
+
+
+          await desbloquearAluno(
+            a.aluno,
+            btnDesbloquear
+          );
+
+        }
+      );
+
+    }
+
+
+    adminLista.appendChild(
+      row
+    );
+
   });
-  painelAdmin.addEventListener("click", (e)=>{ if(e.target === painelAdmin) painelAdmin.classList.remove("show"); });
+
+}
+
+
+/* =========================================================
+   FECHAR ADMIN
+========================================================= */
+
+adminFechar.addEventListener(
+  "click",
+  ()=>{
+    painelAdmin
+      .classList
+      .remove("show");
+  }
+);
+
+
+painelAdmin.addEventListener(
+  "click",
+  e=>{
+
+    if(
+      e.target === painelAdmin
+    ){
+
+      painelAdmin
+        .classList
+        .remove("show");
+
+    }
+
+  }
+);
+
 
 })();
 </script>
+
 </body>
 </html>

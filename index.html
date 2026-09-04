@@ -704,14 +704,18 @@ details[open] summary .arrow{
 
 .admin-overlay{
   align-items:center;
+  padding:16px;
 }
 
 .admin-sheet{
-  max-height:85vh;
+  width:min(96vw,760px);
+  max-width:760px;
+  max-height:92vh;
   display:flex;
   flex-direction:column;
   text-align:left;
   border-radius:22px;
+  padding:24px;
 }
 
 .admin-header{
@@ -720,11 +724,17 @@ details[open] summary .arrow{
   justify-content:space-between;
   gap:10px;
   margin-bottom:14px;
+  flex-shrink:0;
+}
+
+.admin-header .modal-titulo{
+  font-size:20px;
 }
 
 .admin-lista{
   overflow-y:auto;
   flex:1;
+  padding-right:2px;
 }
 
 .admin-item{
@@ -734,13 +744,14 @@ details[open] summary .arrow{
   gap:8px;
   border:2px solid var(--borda);
   border-radius:14px;
-  padding:10px 12px;
+  padding:12px;
   margin-bottom:10px;
+  width:100%;
 }
 
 .admin-item .admin-nome{
-  flex:1 1 auto;
-  min-width:110px;
+  flex:1 1 220px;
+  min-width:180px;
   font-weight:800;
   font-size:14px;
   display:flex;
@@ -755,6 +766,7 @@ details[open] summary .arrow{
   font-size:13px;
   color:var(--texto2);
   min-width:80px;
+  text-align:center;
 }
 
 .admin-olho{
@@ -764,7 +776,24 @@ details[open] summary .arrow{
   line-height:1;
   padding:4px;
   cursor:pointer;
+  flex-shrink:0;
 }
+
+.admin-item > .btn-mini{
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+.admin-item > [data-tirar-prioridade]{
+  min-width:185px;
+}
+
+.admin-item > [data-bloquear],
+.admin-item > [data-desbloquear]{
+  min-width:125px;
+}
+
+/* TAGS ADMIN */
 
 .admin-tag-bloqueado{
   font-size:11px;
@@ -825,6 +854,58 @@ details[open] summary .arrow{
   color:var(--texto2);
   margin-top:10px;
   font-weight:700;
+}
+
+@media(max-width:760px){
+
+  .admin-sheet{
+    width:96vw;
+    max-width:96vw;
+  }
+
+  .admin-item{
+    align-items:stretch;
+  }
+
+  .admin-item .admin-nome{
+    flex:1 1 100%;
+  }
+
+  .admin-item .admin-senha{
+    flex:1 1 auto;
+  }
+
+  .admin-item > .btn-mini{
+    flex:1 1 auto;
+  }
+
+}
+
+@media(max-width:520px){
+
+  .admin-overlay{
+    padding:8px;
+  }
+
+  .admin-sheet{
+    width:98vw;
+    max-width:98vw;
+    max-height:94vh;
+    padding:18px;
+    border-radius:20px;
+  }
+
+  .admin-header .modal-titulo{
+    font-size:17px;
+  }
+
+  .admin-item > [data-tirar-prioridade],
+  .admin-item > [data-bloquear],
+  .admin-item > [data-desbloquear]{
+    min-width:0;
+    width:100%;
+  }
+
 }
 
 @media(max-width:360px){
@@ -1323,7 +1404,7 @@ let state =
   estadoVazio();
 
 
-*//* =========================================================
+/* =========================================================
    TOAST
 ========================================================= */
 
@@ -1624,9 +1705,9 @@ function horarioAtualIndex(){
       ini,
       fim
     } =
-      minutosDoHorario(
-        HORARIOS[i]
-      );
+    minutosDoHorario(
+      HORARIOS[i]
+    );
 
     if(
       agora >= ini &&
@@ -3675,13 +3756,13 @@ async function tirarPrioridadeAluno(
     const {
       error
     } =
-      await sb.rpc(
-        "admin_remover_prioridade_baixa",
-        {
-          p_token:adminToken,
-          p_id:item.id
-        }
-      );
+    await sb.rpc(
+      "admin_remover_prioridade_baixa",
+      {
+        p_token:adminToken,
+        p_id:item.id
+      }
+    );
 
 
     if(error){

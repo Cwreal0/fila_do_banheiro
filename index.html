@@ -254,8 +254,6 @@
   .btn-verde-mini:active{box-shadow:0 1px 0 var(--verde-escuro);}
   .btn-cinza{background:#CFCFCF; box-shadow:0 3px 0 #B5B5B5; cursor:not-allowed;}
   .btn-cinza:active{top:0;}
-  .btn-vermelho{background:var(--vermelho); box-shadow:0 3px 0 var(--vermelho-escuro);}
-  .btn-vermelho:active{box-shadow:0 1px 0 var(--vermelho-escuro);}
 
   .btn-outline{
     background:transparent;
@@ -684,7 +682,7 @@
   }
 
   function estadoVazio(){
-    return { queue: [], history: [], counts: {}, bloqueados: {} };
+    return { queue: [], history: [], counts: {}, baixaCounts: {}, bloqueados: {} };
   }
 
   function rowParaItem(row){
@@ -718,7 +716,13 @@
     state.queue = todos.filter(i => i.status !== "concluido");
     state.history = todos.filter(i => i.status === "concluido").sort((a,b) => (b.volta||0) - (a.volta||0));
     state.counts = {};
-    todos.forEach(i => { state.counts[i.aluno] = (state.counts[i.aluno] || 0) + 1; });
+    state.baixaCounts = {};
+    todos.forEach(i => {
+      state.counts[i.aluno] = (state.counts[i.aluno] || 0) + 1;
+      if(i.prioridade === "baixa") {
+        state.baixaCounts[i.aluno] = (state.baixaCounts[i.aluno] || 0) + 1;
+      }
+    });
     state.bloqueados = {};
     (blos || []).forEach(b => { state.bloqueados[b.aluno] = true; });
   }
@@ -899,7 +903,8 @@
       toast(aluno + " já foi ao banheiro nessa aula hoje!", "erro");
       return;
     }
-    const prioridade = vezesHoje >= 1 ? "baixa" : "normal";
+    const vezesBaixaHoje = state.baixaCounts[aluno] || 0;
+    const prioridade = vezesBaixaHoje >= 1 ? "baixa" : "normal";
     const h = HORARIOS[horarioSelecionado];
     const btnEntrar = document.getElementById("btnEntrar");
     btnEntrar.disabled = true;
@@ -1086,10 +1091,6 @@
       botao = `<button class="btn-mini btn-azul" data-acao="voltou" data-id="${item.id}">Voltou</button>`;
     }
 
-    const botaoAdminPrioridade = (adminToken && item.prioridade === "baixa")
-      ? `<button class="btn-mini btn-azul" data-acao="tirarBaixa" data-id="${item.id}" style="margin-left:6px;">⭐ Tirar prioridade baixa</button>`
-      : "";
-
     div.innerHTML = `
       <div class="avatar">${iniciais(item.aluno)}</div>
       <div class="fila-info">
@@ -1097,9 +1098,8 @@
         <div class="sub">${sub}</div>
       </div>
       ${botao}
-      ${botaoAdminPrioridade}
     `;
-    const btn = div.querySelector('[data-acao="sair"], [data-acao="voltou"]');
+    const btn = div.querySelector("button");
     btn.addEventListener("click", ()=>{
       if(btn.dataset.acao === "sair"){
         if(bloquearSaida){
@@ -1112,35 +1112,7 @@
         abrirModalSenha(item, "voltar");
       }
     });
-    const btnPrioridade = div.querySelector('[data-acao="tirarBaixa"]');
-    if(btnPrioridade){
-      btnPrioridade.addEventListener("click", ()=> tirarPrioridadeBaixa(item.id, btnPrioridade));
-    }
     return div;
-  }
-
-  // ---------- ADMIN: TIRAR PRIORIDADE BAIXA DE UM ITEM ESPECÍFICO ----------
-  async function tirarPrioridadeBaixa(id, btnEl){
-    if(!adminToken) return;
-    if(btnEl) btnEl.disabled = true;
-    const { error } = await sb.rpc("admin_remover_prioridade_baixa", { p_token: adminToken, p_id: id });
-    if(btnEl) btnEl.disabled = false;
-    if(error){
-      console.error("Erro ao tirar prioridade baixa:", error);
-      const msg = (error.message || "").toLowerCase();
-      if(msg.includes("sessão de administrador inválida") || msg.includes("sessao de administrador invalida") || msg.includes("expirada")){
-        toast("Sessão de administrador expirou. Entre novamente. 🔒", "erro");
-        adminToken = null;
-        painelAdmin.classList.remove("show");
-        render();
-      }else{
-        toast("Erro ao tirar a prioridade baixa: " + (error.message || "verifique o Supabase"), "erro");
-      }
-      return;
-    }
-    toast("Prioridade baixa removida! Voltou pra fila normal ⭐", "sucesso");
-    await carregarEstado();
-    render();
   }
 
   function atualizarSelectAlunos(){
@@ -1312,7 +1284,6 @@
 
   async function abrirPainelAdmin(){
     painelAdmin.classList.add("show");
-    render();
     await carregarAdminAlunos();
   }
 
@@ -1337,6 +1308,48 @@
     renderAdminLista();
   }
 
+  async function tirarPrioridadeAluno(aluno, btnEl){
+    if(!adminToken) return;
+    if(btnEl) btnEl.disabled = true;
+
+    // Procura todos os registros de hoje desse aluno que ainda estão com
+    // prioridade baixa. Isso funciona mesmo se ele já saiu da fila, pois
+    // registros concluídos continuam em state.history.
+    const registrosBaixa = [...state.queue, ...state.history]
+      .filter(i => i.aluno === aluno && i.prioridade === "baixa");
+
+    if(registrosBaixa.length === 0){
+      if(btnEl) btnEl.disabled = false;
+      toast(aluno + " não está com prioridade baixa hoje.", "erro");
+      return;
+    }
+
+    for(const item of registrosBaixa){
+      const { error } = await sb.rpc("admin_remover_prioridade_baixa", {
+        p_token: adminToken,
+        p_id: item.id
+      });
+      if(error){
+        console.error("Erro ao tirar prioridade baixa:", error);
+        if(btnEl) btnEl.disabled = false;
+        const msg = (error.message || "").toLowerCase();
+        if(msg.includes("sessão de administrador inválida") || msg.includes("sessao de administrador invalida") || msg.includes("expirada")){
+          toast("Sessão de administrador expirou. Entre novamente. 🔒", "erro");
+          adminToken = null;
+          painelAdmin.classList.remove("show");
+        }else{
+          toast("Erro ao tirar prioridade baixa: " + (error.message || "verifique o Supabase"), "erro");
+        }
+        return;
+      }
+    }
+
+    toast(aluno + " ficou com prioridade normal novamente! ⭐", "sucesso");
+    await carregarEstado();
+    render();
+    await carregarAdminAlunos();
+  }
+
   function renderAdminLista(){
     adminLista.innerHTML = "";
     if(adminAlunos.length === 0){
@@ -1351,9 +1364,8 @@
         <div class="admin-nome">${a.aluno} ${a.bloqueado ? '<span class="admin-tag-bloqueado">🚨 bloqueado</span>' : ''}</div>
         <div class="admin-senha" data-mostrando="false">••••••••</div>
         <button type="button" class="admin-olho" aria-label="Mostrar senha">👁️</button>
-        ${a.bloqueado
-          ? '<button type="button" class="btn-mini btn-azul" data-desbloquear="1">Remover bloqueio</button>'
-          : '<button type="button" class="btn-mini btn-vermelho" data-bloquear="1">Bloquear agora</button>'}
+        <button type="button" class="btn-mini btn-azul" data-tirar-prioridade="1">⭐ Tirar prioridade baixa</button>
+        ${a.bloqueado ? '<button type="button" class="btn-mini btn-azul" data-desbloquear="1">Remover bloqueio</button>' : ''}
       `;
       const senhaEl = row.querySelector(".admin-senha");
       const olhoEl = row.querySelector(".admin-olho");
@@ -1369,6 +1381,11 @@
           olhoEl.textContent = "🙈";
         }
       });
+      const btnPrioridade = row.querySelector("[data-tirar-prioridade]");
+      if(btnPrioridade){
+        btnPrioridade.addEventListener("click", ()=> tirarPrioridadeAluno(a.aluno, btnPrioridade));
+      }
+
       const btnDesbloq = row.querySelector("[data-desbloquear]");
       if(btnDesbloq){
         btnDesbloq.addEventListener("click", async ()=>{
@@ -1388,30 +1405,6 @@
             return;
           }
           toast(a.aluno + " liberado(a) para usar o sistema novamente! ✅", "sucesso");
-          await carregarEstado();
-          render();
-          await carregarAdminAlunos();
-        });
-      }
-      const btnBloquear = row.querySelector("[data-bloquear]");
-      if(btnBloquear){
-        btnBloquear.addEventListener("click", async ()=>{
-          btnBloquear.disabled = true;
-          const { error } = await sb.rpc("admin_bloquear_aluno", { p_token: adminToken, p_aluno: a.aluno, p_dia: diaAtual() });
-          if(error){
-            console.error("Erro ao bloquear aluno:", error);
-            const msg = (error.message || "").toLowerCase();
-            if(msg.includes("sessão de administrador inválida") || msg.includes("sessao de administrador invalida") || msg.includes("expirada")){
-              toast("Sessão de administrador expirou. Entre novamente. 🔒", "erro");
-              adminToken = null;
-              painelAdmin.classList.remove("show");
-            }else{
-              toast("Erro ao bloquear: " + (error.message || "verifique o Supabase"), "erro");
-              btnBloquear.disabled = false;
-            }
-            return;
-          }
-          toast(a.aluno + " foi bloqueado(a) e não pode mais ir ao banheiro hoje. 🚫", "erro");
           await carregarEstado();
           render();
           await carregarAdminAlunos();
